@@ -1,0 +1,33 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+build/
+out/
+coverage/
+
+# env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.json.keypair
+
+# data
+data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+
+# logs
+*.log
+npm-debug.log*
+
+# os / editor
+.DS_Store
+.vscode/
+.idea/

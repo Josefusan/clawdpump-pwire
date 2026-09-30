@@ -1,0 +1,12 @@
+[submodule "integrations/lean-thinking"]
+	path = integrations/lean-thinking
+	url = https://github.com/Cjbuilds/lean-thinking.git
+[submodule "integrations/skillbox"]
+	path = integrations/skillbox
+	url = https://github.com/kitze/skillbox.git
+[submodule "integrations/skills"]
+	path = integrations/skills
+	url = https://github.com/typesafe-ai/skills.git
+[submodule "integrations/john-peslar-ai-skills"]
+	path = integrations/john-peslar-ai-skills
+	url = https://github.com/Josefusan/john-peslar-ai-skills.git
