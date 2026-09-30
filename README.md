@@ -100,13 +100,17 @@ Backtested on ~200 labeled historical launches; precision at `HIGH+` is publishe
 ```
 .
 ├── README.md                          # ← you are here
-├── 00-README-START-HERE.md            # index + deadlines
-├── 01-PWIRE-Product-Spec.md           # product, tools, pricing, architecture, data model
-├── 02-AnsemHack-Rules-and-Win-Plan.md # hackathon stipulations, scoring map, day-by-day plan
-├── 03-Agent-Org-Setup.md              # Jev / Claude / DeepSeek / Hermes roles, gates, caps
-├── 04-Master-Prompt-Jev.md            # orchestrator + per-agent prompts
-├── PumpWire-Project-Brief.md          # earlier reference notes
-├── AnsemHack-Clawrena-Hackathon-Info.md
+├── docs/
+│   ├── kit/                           # planning kit (spec, rules, org setup, prompts)
+│   │   ├── 00-README-START-HERE.md            # index + deadlines
+│   │   ├── 01-PWIRE-Product-Spec.md           # product, tools, pricing, architecture, data model
+│   │   ├── 02-AnsemHack-Rules-and-Win-Plan.md # hackathon stipulations, scoring map, day-by-day plan
+│   │   ├── 03-Agent-Org-Setup.md              # Jev / Claude / DeepSeek / Hermes roles, gates, caps
+│   │   ├── 04-Master-Prompt-Jev.md            # orchestrator + per-agent prompts
+│   │   ├── PumpWire-Project-Brief.md          # earlier reference notes
+│   │   └── AnsemHack-Clawrena-Hackathon-Info.md
+│   └── adr/                           # architecture decision records
+├── packages/                          # ingest, score, api, mcp, live, scout
 ├── skills/                            # 7 agent skills (see below)
 │   ├── clawrena-compliance.SKILL.md
 │   ├── pumpwire-ingest.SKILL.md
@@ -125,7 +129,7 @@ Backtested on ~200 labeled historical launches; precision at `HIGH+` is publishe
 ## Quickstart
 
 > **Status:** this is the spec-first seed commit. The packages below land per the plan in
-> [`02-AnsemHack-Rules-and-Win-Plan.md`](./02-AnsemHack-Rules-and-Win-Plan.md); each is marked once it ships.
+> [`02-AnsemHack-Rules-and-Win-Plan.md`](./docs/kit/02-AnsemHack-Rules-and-Win-Plan.md); each is marked once it ships.
 
 ```bash
 # 1 · clone (submodules included)

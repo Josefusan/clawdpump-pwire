@@ -1,0 +1,23 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/ingest"
+    },
+    {
+      "path": "./packages/score"
+    },
+    {
+      "path": "./packages/api"
+    },
+    {
+      "path": "./packages/mcp"
+    },
+    {
+      "path": "./packages/live"
+    },
+    {
+      "path": "./packages/scout"
+    }
+  ]
+}
