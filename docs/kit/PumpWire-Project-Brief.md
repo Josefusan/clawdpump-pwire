@@ -30,7 +30,7 @@
 | Project name | PumpWire |
 | Project X handle | @Josefusan111 |
 | Primary contact | Joseph Clark |
-| Contact email | josephdsocials999@gmail.com |
+| Contact email | <contact email, kept private> |
 | Track | ClawPump × pump.fun (also auto-entered for Overall Winner) |
 | Entry page | https://clawpump.tech/ansemhack/entry |
 

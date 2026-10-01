@@ -7,7 +7,7 @@ import type { Server } from 'node:http';
 import { createApp, type Backend } from '../src/app.js';
 import { applySchema } from '../src/calls.js';
 import type { Config } from '../src/config.js';
-import { readBacktest } from '../src/stats.js';
+import { buildStats, readBacktest } from '../src/stats.js';
 
 const backend: Backend = {
   verify: async () => ({ isValid: false, invalidReason: 'unused' }) as never,
@@ -91,7 +91,6 @@ describe('/v1/stats.backtest', () => {
 
 describe('first-party labelling at query time', () => {
   it('counts payTo and FIRST_PARTY_WALLETS as first-party even when the stored flag is 0', async () => {
-    const { buildStats } = await import('../src/stats.js');
     const db = new DatabaseSync(':memory:');
     applySchema(db);
     const cfg = cfgWith('/nonexistent/backtest.json');
@@ -108,5 +107,21 @@ describe('first-party labelling at query time', () => {
     const after = buildStats(db, { ...cfg, firstPartyWallets: [SCOUT] }, 10);
     expect(after.totals).toMatchObject({ paid_calls: 3, paid_calls_first_party: 2, paid_calls_third_party: 1, unique_integrators: 1 });
     expect(after.last_calls.map((c) => c.first_party)).toEqual([false, true, true]);
+  });
+
+  it('a null payer is unattributed, not third-party', () => {
+    const db = new DatabaseSync(':memory:');
+    applySchema(db);
+    const cfg = cfgWith('/nonexistent/backtest.json');
+    const ins = db.prepare(`INSERT INTO calls (ts, tool, arg, payer, network, asset, amount, payment_id, tx_sig, settle_via, status, first_party)
+      VALUES (?, 'rug_risk_score', 'm', ?, ?, ?, 10000, ?, ?, 'facilitator', 'served', 0)`);
+    ins.run(1, null, cfg.network, cfg.usdcMint, 'p1', 't1');
+    ins.run(2, 'OtherOtherOtherOtherOtherOtherOtherOther1', cfg.network, cfg.usdcMint, 'p2', 't2');
+    ins.run(3, cfg.payTo, cfg.network, cfg.usdcMint, 'p3', 't3');
+    const s = buildStats(db, cfg, 10);
+    expect(s.totals).toMatchObject({
+      paid_calls: 3, paid_calls_first_party: 1, paid_calls_third_party: 1, paid_calls_unattributed: 1, unique_integrators: 1,
+    });
+    expect(s.last_calls.map((c) => c.party)).toEqual(['first-party', 'third-party', 'unattributed']);
   });
 });

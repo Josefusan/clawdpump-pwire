@@ -45,7 +45,7 @@ pump.fun (onchain)
    ▼
 [mcp]     npm `pumpwire-mcp` (stdio + streamable HTTP) — wraps the paid API with @x402/fetch using the CALLER's wallet
    ▼
-[scout]   Hermes / claw-agent "PWIRE Scout": watches launches, pays for scores, posts HIGH/EXTREME to X/Telegram
+[scout]   Hermes / claw-agent "PWIRE Scout": watches launches, pays for scores, **drafts** HIGH/EXTREME alerts for Joseph to approve; it never posts
 ```
 
 - **Host:** Contabo VPS, `pm2` or `systemd`, Caddy for TLS on `api.<domain>` (or the VPS IP for day 1).

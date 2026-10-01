@@ -36,3 +36,8 @@ npm-debug.log*
 
 # tsc incremental state (per machine)
 *.tsbuildinfo
+
+# local wallets
+*keypair*.json
+id.json
+*-wallet*.json

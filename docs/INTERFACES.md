@@ -155,7 +155,7 @@ export interface ScoreSnapshot {           // input to score(); built by buildSn
 | ingest | `PUMPWIRE_DB_PATH`, `PUMPPORTAL_WS_URL`, `SOLANA_RPC_URL`, `HELIUS_API_KEY`, `INGEST_TRADE_WINDOW_MIN`, `ENRICH_RPS` |
 | score | none (pure) |
 | api | `PORT`, `PUMPWIRE_DB_PATH`, `X402_NETWORK` (CAIP-2), `X402_FACILITATOR_URL`, `PAYTO_ADDRESS`, `USDC_MINT`, `SOLANA_RPC_URL`, `FIRST_PARTY_WALLETS` (comma-separated), `X402_DIRECT_FALLBACK` (`0`/`1`), `X402_MAX_TIMEOUT_S`, `RATE_LIMIT_PER_MIN`; STRETCH: `ANSEM_MINT`, `PWIRE_MINT`, `PWIRE_TIER_MIN_BALANCE`, `JUPITER_QUOTE_URL` |
-| mcp | `PUMPWIRE_API_URL`, `SOLANA_KEYPAIR_PATH`, `PUMPWIRE_NETWORK`, `PUMPWIRE_MAX_PRICE_USD` (default 0.05), `PUMPWIRE_DAILY_CAP_USD` (default 5), `PUMPWIRE_PAY_ASSET` (`USDC`\|`ANSEM`) |
+| mcp | `PUMPWIRE_API_URL`, `SOLANA_KEYPAIR_PATH`, `SOLANA_RPC_URL`, `PUMPWIRE_SPEND_STATE_PATH`, `PUMPWIRE_NETWORK`, `PUMPWIRE_MAX_PRICE_USD` (default 0.05), `PUMPWIRE_DAILY_CAP_USD` (default 5), `PUMPWIRE_PAY_ASSET` (`USDC`\|`ANSEM`) |
 | live | none (same origin as api) |
 | scout | `PUMPWIRE_API_URL`, `SCOUT_KEYPAIR_PATH`, `SCOUT_MAX_PRICE_USD` (≤ 0.05), `SCOUT_DAILY_CAP_USD` (≤ 5), `SCOUT_MIN_VERDICT` |
 
@@ -177,12 +177,12 @@ with `code ∈ INVALID_MINT | NOT_FOUND | PAYMENT_REQUIRED | PAYMENT_INVALID | P
 interface StatsResponse {
   model_version: string; network: string; generated_at: UnixSec;
   totals: {
-    paid_calls: number; paid_calls_first_party: number; paid_calls_third_party: number;
+    paid_calls: number; paid_calls_first_party: number; paid_calls_third_party: number; paid_calls_unattributed: number; // null payer → unattributed, never third-party
     usdc_paid: string; ansem_paid: string;      // decimal strings, UI units
     unique_payers: number; unique_integrators: number;  // integrators = distinct third-party payers
   };
   last_calls: { ts: UnixSec; tool: Tool; arg: Base58; score: number|null; verdict: Verdict|null;
-                tx_sig: TxSig; payer: Base58; asset: Base58; first_party: boolean; latency_ms: number }[]; // ≤ 50, newest first
+                tx_sig: TxSig; payer: Base58; asset: Base58; first_party: boolean; party: 'first-party'|'third-party'|'unattributed'; latency_ms: number }[]; // ≤ 50, newest first
   caught: { mint: Base58; verdict: Verdict; scored_at: UnixSec; outcome: Outcome; outcome_at: UnixSec }[]; // ≤ 50
   backtest: { model_version: string; n: number; precision_high_plus: number; recall_high_plus: number } | null;
 }
@@ -273,7 +273,7 @@ holder_concentration points = `round(15·(bp − 1500) / 2000)`.
 | S03 | 2 early buyers same funder | bundled_launch absent |
 | S04 | 3 prior DEAD_1H by deployer | deployer_history = 25 |
 | S05 | 1 prior DEV_DUMP by a wallet the deployer funded | deployer_history = 10 |
-| S06 | serial rugger (S04) + bundle (S02) + top10 40% | ≥ 50, HIGH or EXTREME |
+| S06 | serial dead-launch deployer (S04) + bundle (S02) + top10 40% | ≥ 50, HIGH or EXTREME |
 | S07 | top10 = 25% | holder_concentration = round(7.5) = 8 |
 | S08 | dev sold 60% | dev_position = 10, evidence.value = 60 |
 | S09 | dev holds 10.0% exactly, sold 0 | dev_position absent (strict >) |
