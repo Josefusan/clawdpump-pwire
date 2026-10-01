@@ -71,7 +71,7 @@ pump.fun (onchain)
 [api]     Express + @x402/express  → GET /v1/risk/:mint  /v1/deployer/:wallet  /v1/early-buyers/:mint
           free: GET /health  GET /live (public dashboard)  GET /v1/stats
    ▼
-[mcp]     pumpwire-mcp (private; run from packages/mcp/dist/index.js) (stdio + streamable HTTP) — wraps the paid API with @x402/fetch, paid by the CALLER's wallet
+[mcp]     @pumpwire/mcp (private; run from packages/mcp/dist/index.js, stdio) — wraps the paid API with @x402/fetch, paid by the CALLER's wallet
    ▼
 [scout]   Hermes / claw-agent "PWIRE Scout": watches launches, pays for scores, drafts HIGH/EXTREME alerts for approval (never posts)
 ```
@@ -103,7 +103,7 @@ A weighted sum capped 0–100. Every factor emits a human-readable reason with t
 | Metadata flags | copies trending name/ticker, no socials, recycled image hash | 5 |
 
 **Verdicts:** 0–24 `LOW` · 25–49 `MED` · 50–74 `HIGH` · 75–100 `EXTREME`.
-Backtested on ~200 labeled historical launches; precision at `HIGH+` is published on `/live`.
+A backtest harness exists (`scripts/backtest.mjs`, labels DEAD_1H / DEV_DUMP / SURVIVED_24H mechanically), but the labelled sample is still small, so no accuracy figure is quoted yet. Precision and recall at `HIGH+` appear on `/live` with the sample size once it is meaningful.
 
 ## Repository layout
 

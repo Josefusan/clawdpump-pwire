@@ -6,7 +6,7 @@ description: The pumpwire-mcp package that lets any agent call PumpWire tools an
 # pumpwire-mcp
 
 ## What it is
-An MCP server (stdio + streamable HTTP) that exposes PumpWire tools and pays for each call with **the caller's** Solana wallet via `@x402/fetch` + `@x402/svm`. PumpWire never holds user keys.
+An MCP server (stdio) that exposes PumpWire tools and pays for each call with **the caller's** Solana wallet via `@x402/fetch` + `@x402/svm`. PumpWire never holds user keys.
 
 ## Tools
 - `rug_risk_score({ mint })`
