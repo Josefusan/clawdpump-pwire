@@ -8,6 +8,8 @@ export interface Config {
   maxTimeoutS: number;
   rateLimitPerMin: number;
   firstPartyWallets: string[];
+  /** JSON written by scripts/backtest.mjs; served as /v1/stats.backtest (null when missing). */
+  backtestJsonPath: string;
 }
 
 // Devnet defaults (verified 2026-09-30). Mainnet must be set explicitly via env.
@@ -32,5 +34,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     maxTimeoutS: Number(env.X402_MAX_TIMEOUT_S ?? 60),
     rateLimitPerMin: Number(env.RATE_LIMIT_PER_MIN ?? 60),
     firstPartyWallets: (env.FIRST_PARTY_WALLETS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
+    backtestJsonPath: env.BACKTEST_JSON_PATH ?? 'data/backtest.json',
   };
 }
