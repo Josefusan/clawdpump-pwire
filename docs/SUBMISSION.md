@@ -44,8 +44,8 @@ All figures are devnet. Commands were run read-only against the team server on 2
 | Devnet tx 1 | https://solscan.io/tx/5kA5iDWoXiTb4ynKimxGyWXeh8ctA6648WMq3ycJhhhMApqCiDTyXAh5sdPihg7GGNA1qu9dwD7QNMdqj9jL4GJb?cluster=devnet | `select tx_sig from calls ... order by id limit 3`, 19:04:11Z |
 | Devnet tx 2 | https://solscan.io/tx/4STJRyjAEzcpSzRVpGByVPwytQckckg1dqmj6F7R41VRqtLdZmgQDLkSgMUMTkNx4DYvd2AnxBtEBw4EaUokdhEY?cluster=devnet | same |
 | Devnet tx 3 | https://solscan.io/tx/4AeBSpFWcCBn5SMDtW8zMHrJ4gMrsSSDfxBnV3eyeMnDp1etfS5y5XK43nXtKXzkaNiHR5vJ2UJkC149R4LEonqq?cluster=devnet | same |
-| Public dashboard | `{{LIVE_URL}}/live` | not yet assigned |
-| Stats JSON | `{{LIVE_URL}}/v1/stats` | not yet assigned |
+| Public dashboard | https://formation-parental-nuclear-fair.trycloudflare.com/live/ | mainnet, verified from outside 2026-10-01 |
+| Stats JSON | https://formation-parental-nuclear-fair.trycloudflare.com/v1/stats | same |
 
 The 67 vs 68 gap is two seconds of Scout activity: `/v1/stats` was read at 19:04:09Z, the database at
 19:04:11Z, and one more call settled in between.
@@ -79,7 +79,7 @@ itself to prove the rail works. They are not customer revenue.
   walkthroughs with the exact response shapes.
 - **Scripts, no chat client:** [examples/](../examples/README.md). `x402-fetch.mjs <mint>` prints the
   402 offer and signs nothing; `--pay` completes the call. `stats.mjs` reads the free counters.
-- The API URL is `{{LIVE_URL}}` once assigned. Until then the devnet API runs on the team server only.
+- The mainnet API URL is https://formation-parental-nuclear-fair.trycloudflare.com (a Cloudflare tunnel to the team server). `GET /v1/risk/<mint>` returns the 402 offer.
 
 Nothing is paid without `--pay` or an explicit tool call, and never above the caps you set.
 
