@@ -14,7 +14,14 @@ export interface Config {
   maxPriceMicro: number;
   dailyCapMicro: number;
   spendStatePath: string;
+  /** May embed an API key: never log. */
+  rpcUrl: string;
 }
+
+const PUBLIC_RPC: Record<string, string> = {
+  [DEVNET]: 'https://api.devnet.solana.com',
+  [MAINNET]: 'https://api.mainnet-beta.solana.com',
+};
 
 export function usdcMintFor(network: string): string | undefined {
   return USDC[network];
@@ -40,10 +47,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   if (!keypairPath) throw new Error('SOLANA_KEYPAIR_PATH is required');
   const asset = (env.PUMPWIRE_PAY_ASSET ?? 'USDC').toUpperCase();
   if (asset !== 'USDC' && asset !== 'ANSEM') throw new Error('PUMPWIRE_PAY_ASSET must be USDC or ANSEM');
+  const net = network(env.PUMPWIRE_NETWORK);
+  const rpcUrl = env.SOLANA_RPC_URL || PUBLIC_RPC[net];
+  if (!rpcUrl) throw new Error('SOLANA_RPC_URL is required for this network');
   return {
     apiUrl: apiUrl.replace(/\/+$/, ''),
     keypairPath,
-    network: network(env.PUMPWIRE_NETWORK),
+    network: net,
+    rpcUrl,
     payAsset: asset,
     maxPriceMicro: usd(env.PUMPWIRE_MAX_PRICE_USD, 0.05, 'PUMPWIRE_MAX_PRICE_USD'),
     dailyCapMicro: usd(env.PUMPWIRE_DAILY_CAP_USD, 5, 'PUMPWIRE_DAILY_CAP_USD'),

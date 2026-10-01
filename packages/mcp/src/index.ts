@@ -6,6 +6,7 @@ import { ExactSvmScheme } from '@x402/svm';
 import { createKeyPairSignerFromBytes } from '@solana/kit';
 import { loadConfig } from './config.js';
 import { SpendStore } from './spend.js';
+import { rpcBalanceReader } from './balance.js';
 import { createServer } from './server.js';
 
 export { loadConfig } from './config.js';
@@ -18,7 +19,13 @@ async function main(): Promise<void> {
   // Key is read once, only from the caller's own path; never logged or sent anywhere.
   const bytes = Uint8Array.from(JSON.parse(readFileSync(cfg.keypairPath, 'utf8')) as number[]);
   const signer = await createKeyPairSignerFromBytes(bytes);
-  const server = createServer({ cfg, spend: new SpendStore(cfg.spendStatePath), scheme: new ExactSvmScheme(signer) });
+  const server = createServer({
+    cfg,
+    spend: new SpendStore(cfg.spendStatePath),
+    scheme: new ExactSvmScheme(signer),
+    payer: signer.address,
+    getBalance: rpcBalanceReader(cfg.rpcUrl),
+  });
   await server.connect(new StdioServerTransport());
 }
 

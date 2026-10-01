@@ -33,6 +33,7 @@ beforeEach(async () => {
   signed = 0;
   settled = [];
   failMessage = undefined;
+  balance = 10_000_000n;
   offer = { network: DEVNET, asset: DEV_USDC, amount: '10000' };
   api = httpServer((req, res) => {
     const json = (code: number, body: unknown, h: Record<string, string> = {}) => {
@@ -77,6 +78,9 @@ const fakeScheme: SchemeNetworkClient = {
   },
 };
 
+let balance: bigint | Error = 10_000_000n;
+const spendFile = () => JSON.parse(readFileSync(join(dir, 'spend.json'), 'utf8')).spentMicro;
+
 async function connect(env: Record<string, string> = {}) {
   const cfg = loadConfig({
     PUMPWIRE_API_URL: url,
@@ -84,7 +88,16 @@ async function connect(env: Record<string, string> = {}) {
     PUMPWIRE_SPEND_STATE_PATH: join(dir, 'spend.json'),
     ...env,
   });
-  const server = createServer({ cfg, spend: new SpendStore(cfg.spendStatePath), scheme: fakeScheme });
+  const server = createServer({
+    cfg,
+    spend: new SpendStore(cfg.spendStatePath),
+    scheme: fakeScheme,
+    payer: 'Payer11111111111111111111111111111111111111',
+    getBalance: async () => {
+      if (balance instanceof Error) throw balance;
+      return balance;
+    },
+  });
   const [a, b] = InMemoryTransport.createLinkedPair();
   await server.connect(b);
   const client = new Client({ name: 't', version: '0' });
@@ -175,7 +188,31 @@ describe('pumpwire-mcp', () => {
     expect(signed).toBe(0);
   });
 
-  it('maps insufficient funds from the API', async () => {
+  it('refuses INSUFFICIENT_FUNDS before signing and releases the reservation', async () => {
+    balance = 9_999n; // price is 10_000
+    const client = await connect();
+    expect(errCode(await call(client, MINT))).toBe('INSUFFICIENT_FUNDS');
+    expect(signed).toBe(0);
+    expect(settled).toHaveLength(0);
+    expect(spendFile()).toBe(0);
+    balance = 0n; // missing token account reads as zero
+    expect(errCode(await call(client, MINT))).toBe('INSUFFICIENT_FUNDS');
+    expect(signed).toBe(0);
+    balance = 10_000n; // exactly enough pays, and the released budget is usable
+    expect((await call(client, MINT)).isError).toBeFalsy();
+    expect(signed).toBe(1);
+    expect(spendFile()).toBe(10000);
+  });
+
+  it('refuses without signing if the balance check fails', async () => {
+    balance = new Error('rpc down');
+    const client = await connect();
+    expect(errCode(await call(client, MINT))).toBe('UPSTREAM');
+    expect(signed).toBe(0);
+    expect(spendFile()).toBe(0);
+  });
+
+  it('maps insufficient funds reported by the API (fallback)', async () => {
     failMessage = 'insufficient funds';
     const client = await connect();
     expect(errCode(await call(client, MINT))).toBe('INSUFFICIENT_FUNDS');

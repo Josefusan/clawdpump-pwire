@@ -36,6 +36,10 @@ export interface PayDeps {
   cfg: Config;
   spend: SpendStore;
   scheme: SchemeNetworkClient;
+  /** Payer's base58 address (public). */
+  payer: string;
+  /** Payer's balance of `mint` in base units on cfg.network; 0n if no token account. */
+  getBalance: (owner: string, mint: string) => Promise<bigint>;
   fetchImpl?: typeof fetch;
 }
 
@@ -61,7 +65,18 @@ export async function fetchRiskResult(deps: PayDeps, mint: string): Promise<unkn
   client.onBeforePaymentCreation(async ({ selectedRequirements }) => {
     try {
       reserved = enforcePolicy(cfg, spend, selectedRequirements);
+      // Still before signing: refuse if the payer cannot cover the amount (missing token account = 0).
+      let balance: bigint;
+      try {
+        balance = await deps.getBalance(deps.payer, selectedRequirements.asset);
+      } catch {
+        throw new ToolError('UPSTREAM', 'balance check failed');
+      }
+      if (balance < BigInt(selectedRequirements.amount)) throw new ToolError('INSUFFICIENT_FUNDS');
     } catch (e) {
+      // Abort happens outside the library's failure hook, so return the reservation here.
+      if (reserved > 0) spend.release(reserved);
+      reserved = 0;
       policyError = e instanceof ToolError ? e : new ToolError('UPSTREAM');
       return { abort: true, reason: policyError.code };
     }
