@@ -5,7 +5,7 @@
 ### The agent that does the homework trading bots skip.
 
 PumpWire watches every **pump.fun** launch, bonding curve and dev wallet on Solana — then sells
-what it finds as **MCP tools**: rug-risk scores, early-buyer cluster maps and repeat-deployer alerts.
+what it finds as **MCP tools**: rug-risk scores today; early-buyer cluster maps and repeat-deployer alerts are planned.
 
 Other agents pay **per call over [x402](https://x402.org)** in USDC, so every request is an onchain
 transaction. $ANSEM payment and a $PWIRE holder tier are planned (not live yet).
@@ -15,13 +15,14 @@ transaction. $ANSEM payment and a $PWIRE holder tier are planned (not live yet).
 ![status](https://img.shields.io/badge/status-devnet%20live%20%C2%B7%20mainnet%20cutover%20pending-blue)
 ![network](https://img.shields.io/badge/network-Solana-9945FF)
 ![payments](https://img.shields.io/badge/payments-x402-00A3FF)
-![runtime](https://img.shields.io/badge/runtime-Hermes%20%2F%20claw--agent-black)
 
 </div>
 
 ---
 
 ## Use it in 5 minutes
+
+**Judges:** start with [docs/SUBMISSION.md](./docs/SUBMISSION.md).
 
 - **Hermes / claw-agent:** [`hermes/`](./hermes/README.md) — register the MCP server, drop in the skill, ask *"rug check `<mint>`"*.
 - **Any MCP client (Claude Code, Claude Desktop, Cursor):** the config block is in [`docs/USE-CASES.md`](./docs/USE-CASES.md#b-claude-code--claude-desktop-mcp-config--sample-prompt).
@@ -68,12 +69,12 @@ pump.fun (onchain)
    ▼
 [score]   pure function score(mint, snapshot) → { score, verdict, reasons[] }   (versioned, unit-tested)
    ▼
-[api]     Express + @x402/express  → GET /v1/risk/:mint  /v1/deployer/:wallet  /v1/early-buyers/:mint
+[api]     Express + @x402/core  → GET /v1/risk/:mint
           free: GET /health  GET /live (public dashboard)  GET /v1/stats
    ▼
 [mcp]     @pumpwire/mcp (private; run from packages/mcp/dist/index.js, stdio) — wraps the paid API with @x402/fetch, paid by the CALLER's wallet
    ▼
-[scout]   Hermes / claw-agent "PWIRE Scout": watches launches, pays for scores, drafts HIGH/EXTREME alerts for approval (never posts)
+[scout]   "PWIRE Scout" (our own buyer, a Node worker): watches launches, pays for scores, drafts HIGH/EXTREME alerts for approval (never posts)
 ```
 
 ```mermaid
@@ -81,7 +82,7 @@ flowchart TD
     A[pump.fun onchain] -->|RPC logsSubscribe + Helius| B[ingest worker]
     B --> C[(SQLite WAL)]
     C --> D["score(mint, snapshot) → reasons[]"]
-    D --> E["x402 API /v1/risk, /v1/deployer, /v1/early-buyers"]
+    D --> E["x402 API /v1/risk"]
     E --> F[pumpwire-mcp]
     F --> G[PWIRE Scout / external agents]
     E --> H["/live public dashboard"]
@@ -181,8 +182,9 @@ onchain. Caps are enforced before anything is signed. Full walkthroughs: [`docs/
 
 ## Agent skills
 
-The `skills/` folder holds the operating playbooks for the PumpWire agent org. Copy each into your
-Hermes skills directory as `<name>/SKILL.md`.
+The `skills/` folder holds the operating playbooks for the PumpWire agent org, one flat
+`<name>.SKILL.md` file each. To use one in Hermes, copy it in as
+`~/.hermes/skills/<category>/<name>/SKILL.md` (see [`hermes/README.md`](./hermes/README.md)).
 
 | Skill | Purpose |
 |---|---|
@@ -191,7 +193,7 @@ Hermes skills directory as `<name>/SKILL.md`.
 | `pumpwire-rug-risk` | the scoring engine and its backtest |
 | `pumpwire-x402-api` | paid HTTP API, pricing, USDC (live); $ANSEM + $PWIRE tier planned, not enabled |
 | `pumpwire-mcp` | the MCP client other agents install (private; run from packages/mcp/dist/index.js) |
-| `pumpwire-scout` | the live buyer/alert agent on ClawPump (Hermes) |
+| `pumpwire-scout` | our own buyer/alert agent on ClawPump: pays for scores, drafts alerts |
 | `build-in-public` | X posts, `/live` page, stream prep |
 
 ## Integrated repos (submodules)
@@ -213,8 +215,8 @@ Clone them with `git submodule update --init --recursive`.
 |---|---|---|
 | Thu Oct 1, 24:00 UTC−5 | Register + tokenize | ✅ Done |
 | Thu Oct 1 | MVP code-complete on devnet (ingest, scorer, x402 API, MCP, Scout, /live) | ✅ Done |
-| **Thu Oct 1 – Fri Oct 2** | **MVP LIVE on mainnet + first paid calls** | ⏳ |
-| Sat Oct 3 – Tue Oct 6 | Stretch: deployer history, $ANSEM + holder tier (planned, not enabled), alerts | ⏳ |
+| **Sat Oct 3, 11:59 PM CT** | **MVP LIVE on mainnet + first paid calls** | ⏳ |
+| Sun Oct 4 – Tue Oct 6 | Stretch: deployer history, $ANSEM + holder tier (planned, not enabled), alerts | ⏳ |
 | Wed Oct 7 | Judging closes — everything live | ⏳ |
 | Thu Oct 8 | Winners announced | — |
 

@@ -90,7 +90,7 @@ It reads `PUMPWIRE_API_URL` (set `PUMPWIRE_API_URL=http://127.0.0.1:3000` in fro
 2. **A-003** Merge and cut over. This handoff commit sits on `main`, so `dev` no longer fast-forwards onto `main`; use a real merge:
 
    ```bash
-   ssh pw 'cd ~/pumpwire && git fetch origin && git checkout main && git pull --ff-only origin main && git merge --no-ff origin/dev -m "G4: merge dev into main" && git push origin main && bash scripts/cutover-mainnet.sh'
+   ssh pw -t 'cd ~/pumpwire && git fetch origin && git checkout main && git pull --ff-only origin main && git merge --no-ff origin/dev -m "G4: merge dev into main" && git push origin main && bash scripts/cutover-mainnet.sh'
    ```
 
    `cutover-mainnet.sh` preflights the env NAMES, builds, `pm2 startOrReload ecosystem.mainnet.config.cjs`, smokes `/health`. Rollback: `bash scripts/cutover-mainnet.sh --rollback` (stops the mainnet api, puts ingest back on the devnet definition).

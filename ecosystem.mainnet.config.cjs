@@ -20,9 +20,19 @@ const base = {
   merge_logs: true,
 };
 
+const DATA = path.join(os.homedir(), 'pumpwire-data');
+// Mainnet state is separate from devnet (/v1/stats has no network filter). Keep the same values in mainnet.env too:
+// Node's --env-file can override the pm2 env.
+const DB_ENV = { PUMPWIRE_DB_PATH: path.join(DATA, 'mainnet.db') };
+const SCOUT_ENV = Object.assign({}, DB_ENV, {
+  SCOUT_STATE_PATH: path.join(DATA, 'scout-mainnet', 'state.json'),
+  PUMPWIRE_SPEND_STATE_PATH: path.join(DATA, 'scout-mainnet', 'spend.json'),
+});
+
 module.exports = {
   apps: [
-    Object.assign({}, base, { name: 'pumpwire-ingest', script: 'dist/main.js', cwd: path.join(ROOT, 'packages/ingest') }),
-    Object.assign({}, base, { name: 'pumpwire-api', cwd: path.join(ROOT, 'packages/api') }),
+    Object.assign({}, base, { name: 'pumpwire-ingest', script: 'dist/main.js', cwd: path.join(ROOT, 'packages/ingest'), env: DB_ENV }),
+    Object.assign({}, base, { name: 'pumpwire-api', cwd: path.join(ROOT, 'packages/api'), env: DB_ENV }),
+    Object.assign({}, base, { name: 'pumpwire-scout', script: 'dist/main.js', cwd: path.join(ROOT, 'packages/scout'), env: SCOUT_ENV }),
   ],
 };
