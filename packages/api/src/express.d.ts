@@ -18,9 +18,16 @@ declare module 'express' {
   export interface Express {
     get(path: string, ...handlers: Handler[]): Express;
     use(...handlers: Handler[]): Express;
+    use(path: string, ...handlers: Handler[]): Express;
     set(name: string, value: unknown): Express;
     disable(name: string): Express;
     listen(port: number, cb?: () => void): import('node:http').Server;
   }
-  export default function express(): Express;
+  interface ExpressStatic {
+    (): Express;
+    /** express.static(root, opts) — serves files under root; `fallthrough: false` makes misses 404 instead of falling through. */
+    static(root: string, options?: { index?: string | false; fallthrough?: boolean; dotfiles?: 'allow' | 'deny' | 'ignore' }): Handler;
+  }
+  const express: ExpressStatic;
+  export default express;
 }
