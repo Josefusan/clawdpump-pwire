@@ -41,6 +41,6 @@ Judging is **already running** (Sep 28 → Oct 7). Every day live counts, so shi
 ## Assumptions to confirm
 
 - **"Jev"** is treated as your org's **orchestrator/PM agent**. If Jev is something else, swap the name in `03` and `04`.
-- Hosting on your **Contabo VPS** (`joseph` user), code in one repo `pumpwire/`.
+- Hosting on your **a small VPS** (`joseph` user), code in one repo `pumpwire/`.
 - Seller agent = the ClawPump agent already tied to $PWIRE (agent wallet `6TeXC9ay1RBHE2QasADUScD1865ZKfmePFt8wkQLc8Se`).
 - Items marked **VERIFY** (facilitator URL, $ANSEM mint, PumpPortal endpoints) must be checked against live docs before mainnet.
