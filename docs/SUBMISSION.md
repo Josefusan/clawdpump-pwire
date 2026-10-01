@@ -1,7 +1,7 @@
 # PumpWire ($PWIRE): AnsemHack Clawrena submission
 
 Track: **ClawPump x pump.fun** (also entered for Overall Winner). Entry post on X: https://x.com/Josefusan111/status/2105017820816019781 (tags @clawpumptech).
-Token: $PWIRE, launched on ClawPump. Mint: `{{PWIRE_MINT}}`.
+Token: $PWIRE, launched on ClawPump. Mint: [`2b2Tv315U1FUtYF9Y1H2b2qrCnL3tN5QPabScFPCw8vw`](https://solscan.io/token/2b2Tv315U1FUtYF9Y1H2b2qrCnL3tN5QPabScFPCw8vw) (mint and freeze authority revoked).
 Repo: https://github.com/Josefusan/clawdpump-pwire. Every number below names the command and the UTC time it was run.
 
 ## 1. What it is
