@@ -294,15 +294,15 @@ describe('live package', () => {
 
 describe('honest rendering of unknowns', () => {
   it('never prints a false 0% for a null precision/recall and shows the harness caveat', () => {
-    const vm = buildViewModel({ ..., backtest: { model_version: 'v0.1.0', n: 0, precision_high_plus: null, recall_high_plus: null, caveat: 'scorer not built' } }, NOW);
+    const vm = buildViewModel({ ...statsResponse(), backtest: { model_version: 'v0.1.0', n: 0, precision_high_plus: null, recall_high_plus: null, caveat: 'scorer not built' } }, NOW);
     expect(vm.backtest).toEqual({ model: 'v0.1.0', n: '0', precision: '—', recall: '—', small: true, caveat: 'scorer not built' });
     expect(backtestText(vm.backtest)).toBe('v0.1.0: harness ran, no labelled launches yet (n = 0) — scorer not built');
-    const vm2 = buildViewModel({ ..., backtest: { model_version: 'v0.1.0', n: 12, precision_high_plus: null, recall_high_plus: 0.25 } }, NOW);
+    const vm2 = buildViewModel({ ...statsResponse(), backtest: { model_version: 'v0.1.0', n: 12, precision_high_plus: null, recall_high_plus: 0.25 } }, NOW);
     expect(backtestText(vm2.backtest)).toBe('v0.1.0: precision at HIGH+ —, recall 25%, n = 12 (small sample — indicative only)');
   });
 
   it('labels a call "unlabelled" when first_party is not a boolean instead of silently calling it third-party', () => {
-    const vm = buildViewModel({ ..., last_calls: [{ ....last_calls[0], first_party: undefined }] }, NOW);
+    const vm = buildViewModel({ ...statsResponse(), last_calls: [{ ...statsResponse().last_calls[0], first_party: undefined }] }, NOW);
     expect(vm.calls[0].party).toBe('unlabelled');
   });
 });
