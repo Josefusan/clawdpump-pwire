@@ -34,3 +34,9 @@ to `PAYTO_ADDRESS`'s ATA, token = mainnet USDC `EPjFWdd5…Dt1v`. Also check `ht
 
 **Rollback (one command)**: `scripts/cutover-mainnet.sh --rollback` — stops `pumpwire-api` (mainnet API off) and moves
 `pumpwire-ingest` back to the devnet definition. Logs: `pm2 logs pumpwire-api --lines 100 --nostream`.
+
+## Trade source (T-028)
+
+Ingest's default source (`INGEST_TRADE_SOURCE=logs`) is pump.fun program events over Solana **mainnet** `logsSubscribe`: creates, trades and migrations are decoded from `Program data:` log lines with their exact slot, validated like any other untrusted input, with no API key and a single subscription. pump.fun exists only on mainnet, so the socket is chosen independently of the payment network: `SOLANA_WS_URL` if set, else Helius mainnet via `HELIUS_API_KEY`, else the public `wss://api.mainnet-beta.solana.com` (works, rate limited). Trades are stored only for mints created inside the last `INGEST_TRADE_WINDOW_MIN` minutes, at most `INGEST_MAX_TRACKED` of them. `INGEST_TRADE_SOURCE=pumpportal` restores the PumpPortal feed (its `subscribeTokenTrade` needs a funded PumpPortal key).
+
+Health: the 10 s `ingest: stats` line carries `trade_source` and `logs: {frames, notifications, failed_tx, events, reconnects}`; `trades` and `rows_trades` must climb within a minute of start. If `logs.reconnects` climbs and `events` does not, the WS endpoint is rejecting `logsSubscribe` (rate limit or unsupported): set `SOLANA_WS_URL` to a provider that supports it.

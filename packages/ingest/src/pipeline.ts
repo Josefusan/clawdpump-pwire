@@ -1,4 +1,5 @@
 import { parseFrame } from './parse.js';
+import type { Parsed } from './parse.js';
 import type { Store } from './db.js';
 import type { SlotClock } from './slot.js';
 
@@ -36,16 +37,20 @@ export class Pipeline {
   constructor(private readonly store: Store, private readonly clock: SlotClock) {}
 
   handle(raw: string, nowMs: number = Date.now()): Effects {
+    this.counters.frames++;
+    return this.handleParsed(parseFrame(raw), this.clock.now(nowMs), Math.floor(nowMs / 1000));
+  }
+
+  /** Same core for an already-decoded message (e.g. a pump.fun log event) with an exact slot and timestamp. */
+  handleParsed(msg: Parsed, slot: number, ts: number): Effects {
     const fx: Effects = { subscribe: [], unsubscribe: [], enrich: [], active: [] };
     const c = this.counters;
-    c.frames++;
-    const msg = parseFrame(raw);
     if (msg.kind === 'ignored') c.ignored++;
     else if (msg.kind === 'malformed') c.malformed++;
     else if (msg.kind === 'error') c.upstream_errors++;
     else {
       try {
-        const r = this.store.apply(msg, this.clock.now(nowMs), Math.floor(nowMs / 1000));
+        const r = this.store.apply(msg, slot, ts);
         if (msg.kind === 'create') c.creates++;
         else if (msg.kind === 'trade') c.trades++;
         else c.migrations++;
