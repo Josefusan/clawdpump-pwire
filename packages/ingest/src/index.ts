@@ -1,1 +1,10 @@
 export const name = 'ingest';
+export { parseFrame, parseMessage, toRaw } from './parse.js';
+export type { Parsed, ParsedCreate, ParsedTrade, ParsedMigrate, Skipped } from './parse.js';
+export { openDb, Store } from './db.js';
+export type { ApplyResult } from './db.js';
+export { Pipeline, newCounters } from './pipeline.js';
+export type { Counters, Effects } from './pipeline.js';
+export { SlotClock } from './slot.js';
+export { backoffMs } from './backoff.js';
+export { cleanText, isAddress, isSig, LIMITS } from './sanitize.js';
