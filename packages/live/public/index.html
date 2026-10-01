@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PumpWire · live paid calls</title>
+<meta name="description" content="PumpWire sells pump.fun rug-risk scores to agents per call over x402. Every paid call is a settled Solana transaction. This page shows them live.">
+<meta name="color-scheme" content="dark">
+<style>
+  :root {
+    --bg: #0b0d10; --card: #14181d; --line: #262e37; --fg: #e8edf2;
+    --muted: #8b97a5; --ok: #39d98a; --warn: #ffb020; --bad: #ff5c5c; --link: #7cc4ff;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+  body {
+    margin: 0; max-width: 100%; overflow-x: hidden;
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow-wrap: break-word;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 16px 16px 32px; }
+  h1 { font-size: 21px; line-height: 1.25; margin: 0 0 4px; }
+  h1 span { color: var(--muted); font-weight: 400; }
+  h2 { font-size: 13px; margin: 24px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  p { margin: 8px 0; }
+  code { font-size: .92em; }
+  .meta, .lede, .note, footer { color: var(--muted); font-size: 13px; }
+  .meta strong { color: var(--fg); font-weight: 500; }
+  .error { color: var(--warn); font-size: 13px; min-height: 1.25em; }
+  .counters { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .counter { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .counter .value { font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .counter .label { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .calls { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .call { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .call-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+  .badge { font-weight: 600; font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg); }
+  .v-low { color: var(--ok); border-color: #1e4a37; }
+  .v-med { color: var(--warn); border-color: #4a3a17; }
+  .v-high, .v-extreme { color: var(--bad); border-color: #4d2323; }
+  .v-none { color: var(--muted); }
+  .party { border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
+  .token { font-size: 15px; font-weight: 600; margin: 8px 0 0; }
+  .token .sym { color: var(--muted); font-weight: 400; }
+  .kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; margin: 8px 0 0; font-size: 13px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .links { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
+  .links a, .links .unlinked {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    min-height: 44px; padding: 10px 14px; border-radius: 10px;
+    background: #1a2027; border: 1px solid var(--line); color: var(--link);
+    font-size: 14px; text-decoration: none;
+  }
+  .links a:active { background: #222a33; }
+  .links .unlinked { color: var(--muted); }
+  .links .arrow { color: var(--muted); }
+  .empty { color: var(--muted); font-size: 13px; }
+  .backtest { font-size: 14px; }
+  footer { margin: 28px 0 0; font-size: 12px; }
+  @media (min-width: 520px) {
+    .counters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .links { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<main data-live-root>
+  <header>
+    <h1>PumpWire <span>live paid calls</span></h1>
+    <p class="meta">network <strong data-network>—</strong> · model <strong data-model>—</strong> · updated <span data-updated>—</span></p>
+  </header>
+  <p class="lede">Agents pay PumpWire $0.01 USDC per <code>rug_risk_score(mint)</code> over x402 on Solana. Every call below is a settled transaction.</p>
+  <p class="error" data-error role="status" aria-live="polite"></p>
+
+  <section aria-labelledby="totals-h">
+    <h2 id="totals-h">Totals</h2>
+    <div class="counters" data-counters></div>
+    <p class="note" data-split>—</p>
+  </section>
+
+  <section aria-labelledby="calls-h">
+    <h2 id="calls-h">Last 50 calls</h2>
+    <ul class="calls" data-calls></ul>
+  </section>
+
+  <section aria-labelledby="caught-h">
+    <h2 id="caught-h">Caught it</h2>
+    <p class="note">Scored HIGH/EXTREME before the dump — both timestamps shown. Wallets, not people.</p>
+    <ul class="calls" data-caught></ul>
+  </section>
+
+  <section aria-labelledby="backtest-h">
+    <h2 id="backtest-h">Backtest</h2>
+    <p class="backtest" data-backtest>—</p>
+  </section>
+
+  <p class="note">MCP: the <code>@pumpwire/mcp</code> stdio server (in this repo, <code>packages/mcp</code>) exposes <code>rug_risk_score(mint)</code> and pays from your own wallet. First-party calls (our own Scout) are always labelled.</p>
+  <footer>PumpWire ($PWIRE) · AnsemHack Clawrena · built on ClawPump × pump.fun · risk scores are signals, not advice.</footer>
+</main>
+<script type="module" src="/live/live.js"></script>
+</body>
+</html>
