@@ -1,0 +1,5 @@
+{
+  "error": "Forbidden",
+  "code": 403,
+  "details": "The Wallet API requires a paid plan."
+}

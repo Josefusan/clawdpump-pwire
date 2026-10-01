@@ -1,0 +1,14 @@
+{
+  "mint": "c5zjA1p9tyS5vjWTW125a5LRgf4PYHt3tMYHc9EXpump",
+  "traderPublicKey": "E36RibWsSdkotu4R2HNTC9L9gTabJuzTkjvBiuSBayrq",
+  "txType": "buy",
+  "solAmount": 9876.54321,
+  "tokenAmount": 9007199254740992,
+  "newTokenBalance": 9007199254740992,
+  "bondingCurveKey": "drm6mcmgsC1xs41z1xsAXr18PtKtsNjtfCqGFG3npump",
+  "vSolInBondingCurve": 9906.54321,
+  "vTokensInBondingCurve": 1765809254740992,
+  "marketCapSol": 10987.65,
+  "signature": "UmSfQj4saZt1Sh6hSb2hrytFiRe9GHkmxoQoLRt5Eyt7rFSXnhLMrs27W9r3kRpw61SPkh4opm8mkP8Mi3nTn3k3",
+  "pool": "pump"
+}

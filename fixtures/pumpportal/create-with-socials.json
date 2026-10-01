@@ -1,0 +1,21 @@
+{
+  "mint": "3EBeqQPcseBef29gHNVEdxMnsEmgdABiBifAyzXapump",
+  "name": "Rocket Frog",
+  "symbol": "RFROG",
+  "description": "The frog that ships.",
+  "image": "https://ipfs.io/ipfs/QmUhg1eVaMzsLTvZJhEMG1ejijAocFAP6BUo25QVvRCZ4o",
+  "showName": true,
+  "marketCapSol": 5,
+  "initialBuy": 0.5,
+  "bondingCurveKey": "LKNdgwYuxV6yrhC9EMxVeuSX4FJHxXcTLVGZJVtRpump",
+  "vSolInBondingCurve": 35,
+  "vTokensInBondingCurve": 1030000000,
+  "uri": "https://ipfs.io/ipfs/QmUhg1eVaMzsLTvZJhEMG1ejijAocFAP6BUo25QVvRCZ4o",
+  "twitter": "https://x.com/rocketfrog",
+  "telegram": "https://t.me/rocketfrog",
+  "website": "https://rocketfrog.example",
+  "traderPublicKey": "oSHtyxon9EVtmeBYy8DSMpBkyE5rMtf8hWFE9SRn3vPA",
+  "txType": "create",
+  "signature": "UmrPQZLdUXpMJmYfN5tTayzdg1i9ARr5NZEoCyiHzbN1NscMG5JqvKnFvmejCFCFCbUhxMz9zyYT4upyxychSyST",
+  "pool": "pump"
+}

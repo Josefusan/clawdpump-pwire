@@ -1,0 +1,21 @@
+{
+  "mint": "GBYTNRCbNTpj2Tp3zRS5eVkX4PYRYfzug9x1C3GRpump",
+  "name": "",
+  "symbol": "",
+  "description": "",
+  "image": "https://ipfs.io/ipfs/QmUqNuiscTYPgBeFnK814q8XAoCK8RnunhpFATvq8dNPcV",
+  "showName": true,
+  "marketCapSol": 28.14,
+  "initialBuy": 0,
+  "bondingCurveKey": "nm4Xg3v9cmGdNMzunV6wxKNdt1ifnqNPSqAHtFvmpump",
+  "vSolInBondingCurve": 30,
+  "vTokensInBondingCurve": 1073000000,
+  "uri": "",
+  "twitter": "",
+  "telegram": "",
+  "website": "",
+  "traderPublicKey": "oSHtyxon9EVtmeBYy8DSMpBkyE5rMtf8hWFE9SRn3vPA",
+  "txType": "create",
+  "signature": "VEDpf2DkqWjthWqY3r7csCfrPtPUfCh2R6TLV2RimejEsWd8ycDgVcsv7GKG1JBUjiDcH2mNX8BGXLqtM87z5EBW",
+  "pool": "pump"
+}

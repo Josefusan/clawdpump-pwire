@@ -1,0 +1,21 @@
+{
+  "mint": "X8MGHSw87nTNKvj6yc1EZ27eyWVcoeB2MgDi1iRppump",
+  "name": "Ctrl\u0000\u0001\u001b[31m\t\n\u00077rHtoz",
+  "symbol": "CS\u0000\u0001\u001b[31m\t\n\u00072",
+  "description": "ANSI escape + NUL + DEL + tab/newline: body\u0000\u0001\u001b[31m\t\n\u0007P2BW7a",
+  "image": "https://ipfs.io/ipfs/QmfEBeRvKc3ny8ZERchxVcVS7WFQdgHEmCDeuvZk5kVafa",
+  "showName": true,
+  "marketCapSol": 28.14,
+  "initialBuy": 0,
+  "bondingCurveKey": "dJZps8T6fiqnPgqSPAoQszFJKkoCwNMzmCuxDNuUpump",
+  "vSolInBondingCurve": 30,
+  "vTokensInBondingCurve": 1073000000,
+  "uri": "https://ipfs.io/ipfs/QmG5WHNoW5Yh8op36qkVWXCy6XJbYsimWK4PAR8BrKauYT",
+  "twitter": "",
+  "telegram": "",
+  "website": "",
+  "traderPublicKey": "oSHtyxon9EVtmeBYy8DSMpBkyE5rMtf8hWFE9SRn3vPA",
+  "txType": "create",
+  "signature": "PkVEBGwtyW7xy6b8oxbx9W7gyLyNfUqpwJFGhYfe3tySyL5vZWh2KN3amxdtBCfadiyYXGoCPSVvB2XvsrqYRtTa",
+  "pool": "pump"
+}

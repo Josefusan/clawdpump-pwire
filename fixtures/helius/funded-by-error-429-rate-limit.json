@@ -1,0 +1,5 @@
+{
+  "error": "RATE_LIMIT_EXCEEDED",
+  "code": 429,
+  "details": "Too many requests. Retry after 2 seconds."
+}

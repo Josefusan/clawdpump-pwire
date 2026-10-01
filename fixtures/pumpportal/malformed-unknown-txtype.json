@@ -1,0 +1,10 @@
+{
+  "mint": "BEsvbEmtygKgqiqCXrftotf47vXJXvRxovmWqkjYpump",
+  "traderPublicKey": "E36RibWsSdkotu4R2HNTC9L9gTabJuzTkjvBiuSBayrq",
+  "txType": "airdrop",
+  "solAmount": 0,
+  "tokenAmount": 5000,
+  "newTokenBalance": 5000,
+  "signature": "qLDnPWde1YFJbEmCyg1ijtP832jUV8qzXJoiKtyLoS3Eu2Kp3G9ibxDzZv96Pt9t9c5NX29rKJqGKvViP4BzFCBp",
+  "pool": "pump"
+}

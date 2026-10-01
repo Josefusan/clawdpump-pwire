@@ -1,0 +1,30 @@
+{
+  "mint": "WmYoYBgZkXxKQBJqnHzyAfeyQuQyUhzhJFkVA1c1pump",
+  "name": "Forward Compat",
+  "symbol": "FWD",
+  "description": "A fixture token.",
+  "image": "https://ipfs.io/ipfs/Qm9EjeP8VQDz5ihgwQRWDgbCVWqUfndvMWqaBYT63kDxT2",
+  "showName": true,
+  "marketCapSol": 28.14,
+  "initialBuy": 0,
+  "bondingCurveKey": "Ri1ERvMzBaDQ9tRpDafgDnBSV21YVWZE9YuGFQX6pump",
+  "vSolInBondingCurve": 30,
+  "vTokensInBondingCurve": 1073000000,
+  "uri": "https://ipfs.io/ipfs/Qm9EjeP8VQDz5ihgwQRWDgbCVWqUfndvMWqaBYT63kDxT2",
+  "twitter": "",
+  "telegram": "",
+  "website": "",
+  "traderPublicKey": "oSHtyxon9EVtmeBYy8DSMpBkyE5rMtf8hWFE9SRn3vPA",
+  "txType": "create",
+  "signature": "gVxhU5WBtFWhnstPzBvbWwzKxTEF4ovwiMpw27QwiZNXEdkKgfc5YMzszTUHnwA1x3QjvPa9kbk12he5p5NRQ1g3",
+  "pool": "pump",
+  "newPumpPortalField": {
+    "nested": [
+      1,
+      2,
+      3
+    ]
+  },
+  "creator": "oSHtyxon9EVtmeBYy8DSMpBkyE5rMtf8hWFE9SRn3vPA",
+  "feeBps": 100
+}
