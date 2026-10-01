@@ -15,9 +15,9 @@ An MCP server (stdio) that exposes PumpWire tools and pays for each call with **
 - `pumpwire_stats()` (free)
 
 ## Config (env)
-`PUMPWIRE_API_URL`, `SOLANA_KEYPAIR_PATH` (or wallet adapter), `PUMPWIRE_MAX_PRICE_USD` (default 0.05), `PUMPWIRE_PAY_ASSET` = USDC|ANSEM, `PUMPWIRE_DAILY_CAP_USD` (default 5).
+`PUMPWIRE_API_URL`, `SOLANA_KEYPAIR_PATH` (or wallet adapter), `PUMPWIRE_MAX_PRICE_USD` (default 0.05), `PUMPWIRE_PAY_ASSET` = USDC (ANSEM once $ANSEM payments ship), `PUMPWIRE_DAILY_CAP_USD` (default 5).
 
-Client policy: only pay when network = Solana mainnet, asset ∈ {USDC, $ANSEM}, amount ≤ max price, and daily cap not exceeded.
+Client policy: only pay when network = Solana mainnet, asset ∈ {USDC} ($ANSEM only once enabled), amount ≤ max price, and daily cap not exceeded.
 
 ## Install snippet (put on /live and README; this drives "builders onboarded")
 `@pumpwire/mcp` is private and not on npm yet: there is no `npx` install and no CLI flags. Run it from a
