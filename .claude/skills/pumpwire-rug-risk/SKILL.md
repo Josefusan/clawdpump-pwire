@@ -29,7 +29,7 @@ Verdicts: 0–24 LOW · 25–49 MED · 50–74 HIGH · 75–100 EXTREME. Output 
 - Change weights only with a DECISIONS.md entry, and bump model_version.
 
 ## Tests (≥ 15)
-Clean launch → LOW; bundled launch → ≥ HIGH; serial rugger deployer → ≥ HIGH; missing data → score computed with `reasons` noting "insufficient data" (never throw); stable ordering.
+Clean launch → LOW; bundled launch → ≥ HIGH; serial dead-launch deployer deployer → ≥ HIGH; missing data → score computed with `reasons` noting "insufficient data" (never throw); stable ordering.
 
 ## Tone
 "Risk", not "scam". Evidence first. Never name people.

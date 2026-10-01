@@ -116,6 +116,7 @@ export function buildViewModel(stats, now) {
   const paid = int(t.paid_calls);
   const firstParty = int(t.paid_calls_first_party);
   const thirdParty = int(t.paid_calls_third_party);
+  const unattributed = int(t.paid_calls_unattributed);
   const backtest = obj(s.backtest);
   const n = int(backtest?.n);
 
@@ -134,9 +135,11 @@ export function buildViewModel(stats, now) {
     split: {
       firstParty,
       thirdParty,
+      unattributed,
       firstPartyPct: paid > 0 ? firstParty / paid : 0,
       text:
         `${firstParty} first-party (our Scout) · ${thirdParty} third-party (distinct external wallets, not verified builders)` +
+        (unattributed > 0 ? ` · ${unattributed} unattributed (payer not reported)` : '') +
         (paid > 0 ? ` · ${fmtPct(firstParty / paid)} first-party` : ''),
     },
     calls: rows(s.last_calls)
@@ -159,7 +162,7 @@ export function buildViewModel(stats, now) {
           tx: shortAddr(c.tx_sig),
           txHref: solscanTx(c.tx_sig, network),
           payer: shortAddr(c.payer),
-          party: typeof c.first_party === 'boolean' ? (c.first_party ? 'first-party' : 'third-party') : 'unlabelled',
+          party: c.party === 'unattributed' ? 'unattributed' : typeof c.first_party === 'boolean' ? (c.first_party ? 'first-party' : 'third-party') : 'unlabelled',
           latency: c.latency_ms === null || c.latency_ms === undefined ? '—' : `${int(c.latency_ms)} ms`,
         };
       }),

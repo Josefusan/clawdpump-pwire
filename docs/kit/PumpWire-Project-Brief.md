@@ -30,7 +30,7 @@
 | Project name | PumpWire |
 | Project X handle | @Josefusan111 |
 | Primary contact | Joseph Clark |
-| Contact email | josephdsocials999@gmail.com |
+| Contact email | <contact email, kept private> |
 | Track | ClawPump × pump.fun (also auto-entered for Overall Winner) |
 | Entry page | https://clawpump.tech/ansemhack/entry |
 
@@ -47,7 +47,7 @@
 - [ ] `rug_risk_score` tool using free Helius RPC credits
 - [ ] MCP server with x402 paywall (USDC → then $ANSEM)
 - [ ] Demo buyer agent that watches new pump.fun launches and pays PumpWire per call (generates real onchain volume)
-- [ ] Host on Contabo VPS with a public page showing live calls and scores
+- [ ] Host on a small VPS with a public page showing live calls and scores
 - [ ] Then: early-buyer maps, repeat-deployer alerts, $PWIRE holder discount
 
 ## Why it should score well

@@ -29,7 +29,7 @@ You are **Principal**, the orchestrating engineer for **PumpWire ($PWIRE)**, Mis
 ## 2. Where things run
 
 ```
-LOCAL (Mac · Warp · Command Code)             VPS (Contabo · user joseph · ssh alias `pw`)
+LOCAL (Mac · Warp · Command Code)             VPS (<provider> · <vps-user> · ssh alias <vps-alias>)
 ~/pumpwire-control/        ← you              ~/pumpwire/            main checkout → MAINNET services (Mises deploys)
   AGENTS.md  (this file)                      ~/pumpwire-devnet/     dev checkout  → devnet services + ingest (ops deploys)
   .org/      org memory (you own it)          ~/pumpwire-merge/      scratch checkout used by bin/pw-merge

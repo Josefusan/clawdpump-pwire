@@ -61,6 +61,8 @@ export function buildStats(db: DatabaseSync, cfg: Config, nowS: number) {
   const paid = n(`SELECT COUNT(*) AS v FROM calls WHERE ${SERVED}`);
   const fp = n(`SELECT COUNT(*) AS v FROM calls WHERE ${SERVED} AND ${FP}`, ...fpWallets);
   const usdcUnits = n(`SELECT SUM(amount) AS v FROM calls WHERE ${SERVED} AND asset = ?`, cfg.usdcMint);
+  // A null payer (facilitator returned none) is never counted as third-party: it is reported as unattributed.
+  const unattributed = n(`SELECT COUNT(*) AS v FROM calls WHERE ${SERVED} AND payer IS NULL AND first_party = 0`);
   const payers = n(`SELECT COUNT(DISTINCT payer) AS v FROM calls WHERE ${SERVED}`);
   // "integrators" = distinct third-party paying wallets (INTERFACES §4.3). A wallet is not a verified builder.
   const integrators = n(`SELECT COUNT(DISTINCT payer) AS v FROM calls WHERE ${SERVED} AND NOT ${FP}`, ...fpWallets);
@@ -72,7 +74,11 @@ export function buildStats(db: DatabaseSync, cfg: Config, nowS: number) {
          FROM calls WHERE ${SERVED} ORDER BY ts DESC, id DESC LIMIT 50`,
       )
       .all() as Record<string, string | number | null>[]
-  ).map((r) => ({ ...r, first_party: r.first_party === 1 || fpSet.has(String(r.payer)) }));
+  ).map((r) => {
+    const first_party = r.first_party === 1 || (r.payer !== null && fpSet.has(String(r.payer)));
+    const party = first_party ? 'first-party' : r.payer === null ? 'unattributed' : 'third-party';
+    return { ...r, first_party, party };
+  });
 
   const caught = db
     .prepare(
@@ -91,7 +97,8 @@ export function buildStats(db: DatabaseSync, cfg: Config, nowS: number) {
     totals: {
       paid_calls: paid,
       paid_calls_first_party: fp,
-      paid_calls_third_party: paid - fp,
+      paid_calls_third_party: paid - fp - unattributed,
+      paid_calls_unattributed: unattributed,
       usdc_paid: usdc(usdcUnits),
       ansem_paid: '0.000000',
       unique_payers: payers,

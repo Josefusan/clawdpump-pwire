@@ -8,7 +8,7 @@ Status: accepted (T-002) · Context: 01 §Architecture, 03 §Infra, D-001
 - HTTP: `express` + `@x402/express` / `@x402/core` / `@x402/svm` (x402 V2, `exact` scheme) — package names VERIFY.
 - MCP: `pumpwire-mcp` over stdio + streamable HTTP, paying with `@x402/fetch` + `@x402/svm` — package names VERIFY.
 - Tests: `vitest`; scoring is a pure function tested from fixtures (INTERFACES §5.4).
-- Ops: `pm2` process manager, Caddy for TLS on the Contabo VPS; secrets in `~/.config/pumpwire/*.env`.
+- Ops: `pm2` process manager, Caddy for TLS on the a small VPS; secrets in `~/.config/pumpwire/*.env`.
 
 **Why**: boring, single-box, no external DB; synchronous SQLite keeps score snapshots consistent.
 WAL allows one writer per process with concurrent readers (api reads while ingest writes).
