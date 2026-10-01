@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)", "Bash(npx:*)", "Bash(node:*)", "Bash(pnpm:*)", "Bash(tsc:*)", "Bash(vitest:*)",
+      "Bash(git status:*)", "Bash(git diff:*)", "Bash(git add:*)", "Bash(git commit:*)", "Bash(git log:*)",
+      "Bash(git show:*)", "Bash(git fetch:*)", "Bash(git rebase:*)", "Bash(git merge:*)",
+      "Bash(sqlite3:*)", "Bash(ls:*)", "Bash(rg:*)", "Bash(grep:*)", "Bash(jq:*)", "Bash(mkdir:*)", "Bash(cat:*)",
+      "Bash(head:*)", "Bash(tail:*)", "Bash(wc:*)", "Bash(curl -s http://127.0.0.1:*)", "Bash(curl -s http://localhost:*)"
+    ],
+    "deny": [
+      "Read(./.env)", "Read(./.env.*)", "Read(**/.env)", "Read(**/*.env)",
+      "Read(~/.config/pumpwire/**)", "Read(~/.pumpwire-agents.env)", "Read(~/.config/solana/**)", "Read(**/*keypair*.json)",
+      "Bash(cat .env:*)", "Bash(cat ~/.config/pumpwire:*)", "Bash(printenv:*)", "Bash(env:*)", "Bash(set)",
+      "Bash(git push:*)", "Bash(git checkout main:*)", "Bash(git reset --hard:*)", "Bash(git clean:*)",
+      "Bash(npm publish:*)", "Bash(solana:*)", "Bash(solana-keygen:*)", "Bash(spl-token:*)",
+      "Bash(pm2 delete:*)", "Bash(pm2 kill:*)", "Bash(rm -rf:*)",
+      "Bash(sqlite3 /home/joseph/pumpwire-data/pumpwire.db:*)", "Bash(sqlite3 ~/pumpwire-data/pumpwire.db:*)"
+    ]
+  }
+}
