@@ -71,9 +71,9 @@ pump.fun (onchain)
 [api]     Express + @x402/express  → GET /v1/risk/:mint  /v1/deployer/:wallet  /v1/early-buyers/:mint
           free: GET /health  GET /live (public dashboard)  GET /v1/stats
    ▼
-[mcp]     npm pumpwire-mcp (stdio + streamable HTTP) — wraps the paid API with @x402/fetch, paid by the CALLER's wallet
+[mcp]     pumpwire-mcp (private; run from packages/mcp/dist/index.js) (stdio + streamable HTTP) — wraps the paid API with @x402/fetch, paid by the CALLER's wallet
    ▼
-[scout]   Hermes / claw-agent "PWIRE Scout": watches launches, pays for scores, posts HIGH/EXTREME alerts
+[scout]   Hermes / claw-agent "PWIRE Scout": watches launches, pays for scores, drafts HIGH/EXTREME alerts for approval (never posts)
 ```
 
 ```mermaid
@@ -189,8 +189,8 @@ Hermes skills directory as `<name>/SKILL.md`.
 | `clawrena-compliance` | hackathon rules + guardrails — **load in every agent** |
 | `pumpwire-ingest` | pump.fun launch/trade/wallet ingestion |
 | `pumpwire-rug-risk` | the scoring engine and its backtest |
-| `pumpwire-x402-api` | paid HTTP API, pricing, USDC / $ANSEM / $PWIRE tier |
-| `pumpwire-mcp` | the MCP client other agents install |
+| `pumpwire-x402-api` | paid HTTP API, pricing, USDC (live); $ANSEM + $PWIRE tier planned, not enabled |
+| `pumpwire-mcp` | the MCP client other agents install (private; run from packages/mcp/dist/index.js) |
 | `pumpwire-scout` | the live buyer/alert agent on ClawPump (Hermes) |
 | `build-in-public` | X posts, `/live` page, stream prep |
 
@@ -214,7 +214,7 @@ Clone them with `git submodule update --init --recursive`.
 | Thu Oct 1, 24:00 UTC−5 | Register + tokenize | ✅ Done |
 | Thu Oct 1 | MVP code-complete on devnet (ingest, scorer, x402 API, MCP, Scout, /live) | ✅ Done |
 | **Thu Oct 1 – Fri Oct 2** | **MVP LIVE on mainnet + first paid calls** | ⏳ |
-| Sat Oct 3 – Tue Oct 6 | Stretch: deployer history, $ANSEM, holder tier, alerts | ⏳ |
+| Sat Oct 3 – Tue Oct 6 | Stretch: deployer history, $ANSEM + holder tier (planned, not enabled), alerts | ⏳ |
 | Wed Oct 7 | Judging closes — everything live | ⏳ |
 | Thu Oct 8 | Winners announced | — |
 
