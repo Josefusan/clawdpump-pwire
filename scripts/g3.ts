@@ -4,7 +4,8 @@
 //   node --experimental-strip-types --experimental-sqlite scripts/g3.ts
 // Needs `npm run build -w @pumpwire/mcp` first. Optional: G3_MINTS=a,b,c (overrides DB), G3_CALLS (default 20).
 // The keypair value is never printed. Run outside the model sandbox (Principal/Mises: A-012).
-import { readFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const PRICE_USD = 0.01;
@@ -16,14 +17,25 @@ const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 export const FALLBACK_MINTS: string[] = [];
 
 export type NegativeKind = 'wrong_amount' | 'wrong_mint' | 'replayed_tx';
-export interface NegativeOutcome { kind: NegativeKind; status: number; rejected: boolean; detail: string }
+/** Rejected means HTTP 402 with exactly this code; any other status/code is a failure of the check. */
+export const EXPECTED_CODE: Record<NegativeKind, string> = {
+  wrong_amount: 'PAYMENT_INVALID', wrong_mint: 'PAYMENT_INVALID', replayed_tx: 'PAYMENT_REPLAYED',
+};
+export interface NegativeLogEntry { kind: NegativeKind; status: number; error_code: string | null; ts: number }
+export interface NegativeOutcome extends NegativeLogEntry { rejected: boolean; logged: boolean }
+
+export function isRejected(kind: NegativeKind, status: number, code: string | null): boolean {
+  return status === 402 && code === EXPECTED_CODE[kind];
+}
 
 export interface G3Deps {
   mints: string[];
   /** One paid call through the MCP client: 402 -> pay -> RiskResult. */
   paidCall(mint: string): Promise<{ ok: boolean; error?: string }>;
-  /** Negative case; `mint`/`other` may be equal if only one mint is known. Returns the API's HTTP status. */
-  negative(kind: NegativeKind, mint: string, other: string): Promise<{ status: number; detail: string }>;
+  /** Negative case; `mint`/`other` may be equal if only one mint is known. Returns the API's status + error code. */
+  negative(kind: NegativeKind, mint: string, other: string): Promise<{ status: number; error_code: string | null }>;
+  /** Durably record a negative outcome (the API writes no `calls` row for rejected payments). */
+  logNegative(entry: NegativeLogEntry): void;
   /** Settled tx sigs recorded in `calls` for these mints since `sinceTs` (empty if no DB). */
   txSigs(mints: string[], sinceTs: number): string[];
   now(): number;
@@ -39,32 +51,37 @@ export async function runG3(deps: G3Deps, target = TARGET_CALLS): Promise<G3Summ
   const since = deps.now();
   let successes = 0;
   for (let i = 0; i < target; i++) {
-    const r = await deps.paidCall(deps.mints[i % deps.mints.length]!);
-    if (r.ok) successes++;
+    try {
+      if ((await deps.paidCall(deps.mints[i % deps.mints.length]!)).ok) successes++;
+    } catch { /* counted as a failure; keep going so a summary is always produced */ }
   }
+  // Capture sigs before the negatives: the replay setup makes one more real paid call.
+  const txSigs = [...new Set(deps.txSigs([...new Set(deps.mints)], since))];
   const mint = deps.mints[0]!;
   // Replay targets a different mint: the same tool+arg would legitimately be re-served (ADR-002).
   const other = deps.mints.find((m) => m !== mint) ?? mint;
   const negatives: NegativeOutcome[] = [];
   for (const kind of ['wrong_amount', 'wrong_mint', 'replayed_tx'] as const) {
+    let status = 0;
+    let error_code: string | null = null;
     try {
-      const r = await deps.negative(kind, mint, other);
-      negatives.push({ kind, status: r.status, rejected: r.status >= 400 && r.status < 500, detail: r.detail });
-    } catch (e) {
-      negatives.push({ kind, status: 0, rejected: false, detail: e instanceof Error ? e.message : 'error' });
-    }
+      ({ status, error_code } = await deps.negative(kind, mint, other));
+    } catch { /* status 0 = request/setup failed: recorded as not rejected */ }
+    const entry: NegativeLogEntry = { kind, status, error_code, ts: deps.now() };
+    let logged = true;
+    try { deps.logNegative(entry); } catch { logged = false; }
+    negatives.push({ ...entry, rejected: isRejected(kind, status, error_code), logged });
   }
   return {
-    successes, failures: target - successes, usdcSpent: Number((successes * PRICE_USD).toFixed(6)),
-    txSigs: deps.txSigs([...new Set(deps.mints)], since),
-    negatives, ok: successes === target && negatives.every((n) => n.rejected),
+    successes, failures: target - successes, usdcSpent: Number((successes * PRICE_USD).toFixed(6)), txSigs, negatives,
+    ok: successes === target && txSigs.length === target && negatives.every((n) => n.rejected && n.logged),
   };
 }
 
 export function formatSummary(s: G3Summary): string {
   return [
     `G3 ${s.ok ? 'PASS' : 'FAIL'}: successes=${s.successes} failures=${s.failures} usdc_spent=${s.usdcSpent.toFixed(2)}`,
-    ...s.negatives.map((n) => `negative ${n.kind}: ${n.rejected ? 'rejected' : 'NOT REJECTED'} (HTTP ${n.status}) ${n.detail}`),
+    ...s.negatives.map((n) => `negative ${n.kind}: ${n.rejected ? 'rejected' : 'NOT REJECTED'} (HTTP ${n.status} ${n.error_code ?? '-'})${n.logged ? '' : ' LOG WRITE FAILED'}`),
     `tx_sigs (${s.txSigs.length}):`,
     ...s.txSigs.map((t) => `  ${t}`),
   ].join('\n');
@@ -134,13 +151,22 @@ async function main(): Promise<void> {
   };
   const sign = async (req: Required) => http.encodePaymentSignatureHeader(await x402.createPaymentPayload(req as never));
   const pay = (m: string, header: string) => fetch(url(m), { headers: { 'PAYMENT-SIGNATURE': header } });
-  const outcome = async (r: Response) => ({ status: r.status, detail: (await r.text()).slice(0, 120).replace(/\s+/g, ' ') });
+  const outcome = async (r: Response) => {
+    let error_code: string | null = null;
+    try {
+      const e = ((await r.json()) as { error?: unknown }).error;
+      if (typeof e === 'string' && /^[A-Z_]{1,40}$/.test(e)) error_code = e; // codes only, never free text
+    } catch { /* non-JSON body */ }
+    return { status: r.status, error_code };
+  };
+  const logPath = process.env.G3_LOG_PATH ?? join(dbPath ? dirname(dbPath) : process.cwd(), 'g3-negatives.jsonl');
 
   const deps: G3Deps = {
     mints: await resolveMints(db, TARGET_CALLS),
     now: () => Math.floor(Date.now() / 1000),
     async paidCall(mint) {
-      const res = await client.callTool({ name: 'rug_risk_score', arguments: { mint } });
+      const res = await client.callTool({ name: 'rug_risk_score', arguments: { mint } }).catch(() => null);
+      if (!res) return { ok: false, error: 'UPSTREAM' };
       if (res.isError) {
         const t = (res.content as { text?: string }[] | undefined)?.[0]?.text ?? '';
         return { ok: false, error: /^\{"error":"[A-Z_]+"\}$/.test(t) ? t : 'UPSTREAM' }; // codes only
@@ -161,6 +187,7 @@ async function main(): Promise<void> {
       else bad.accepts[0]!.asset = bad.accepts[0]!.asset === DEVNET_USDC ? WSOL : DEVNET_USDC; // wrong mint (asset)
       return outcome(await pay(mint, await sign(bad)));
     },
+    logNegative: (entry) => appendFileSync(logPath, JSON.stringify(entry) + '\n', { mode: 0o600 }),
     txSigs(mints, sinceTs) {
       if (!db) return [];
       const ph = mints.map(() => '?').join(',');
