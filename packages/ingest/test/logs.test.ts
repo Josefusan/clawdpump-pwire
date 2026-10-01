@@ -77,10 +77,10 @@ describe('parseLogsNotification', () => {
 });
 
 describe('wsUrlFrom', () => {
-  it('prefers SOLANA_WS_URL, else derives wss from https', () => {
-    expect(wsUrlFrom({ SOLANA_WS_URL: 'wss://a/ws', SOLANA_RPC_URL: 'https://b' })).toBe('wss://a/ws');
-    expect(wsUrlFrom({ SOLANA_RPC_URL: 'https://rpc.example/?api-key=x' })).toBe('wss://rpc.example/?api-key=x');
-    expect(wsUrlFrom({})).toBeNull();
+  it('SOLANA_WS_URL wins; else Helius mainnet from the key; else public mainnet; never SOLANA_RPC_URL (may be devnet)', () => {
+    expect(wsUrlFrom({ SOLANA_WS_URL: 'wss://a/ws', HELIUS_API_KEY: 'k', SOLANA_RPC_URL: 'https://devnet.helius-rpc.com/?api-key=k' })).toBe('wss://a/ws');
+    expect(wsUrlFrom({ HELIUS_API_KEY: 'k', SOLANA_RPC_URL: 'https://devnet.helius-rpc.com/?api-key=k' })).toBe('wss://mainnet.helius-rpc.com/?api-key=k');
+    expect(wsUrlFrom({ SOLANA_RPC_URL: 'https://devnet.helius-rpc.com/?api-key=k' })).toBe('wss://api.mainnet-beta.solana.com');
   });
 });
 

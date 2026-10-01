@@ -5,6 +5,7 @@ export { openDb, Store } from './db.js';
 export type { ApplyResult } from './db.js';
 export { Pipeline, newCounters } from './pipeline.js';
 export type { Counters, Effects } from './pipeline.js';
+export { TrackedSet, parseMaxTracked, DEFAULT_MAX_TRACKED } from './tracked.js';
 export { SlotClock } from './slot.js';
 export { backoffMs } from './backoff.js';
 export { cleanText, isAddress, isSig, LIMITS } from './sanitize.js';

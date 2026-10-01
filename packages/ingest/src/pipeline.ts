@@ -27,6 +27,7 @@ export interface Effects {
   subscribe: string[];   // newly created mints: subscribe to their trades
   unsubscribe: string[]; // migrated mints: stop trade subscription
   enrich: { wallet: string; priority: boolean }[]; // deployer (priority) + first-30 buyers
+  active: string[];      // mints that just traded (recency signal for eviction)
 }
 
 /** Socket-free core: raw frame in, DB rows + counters + subscription effects out. */
@@ -42,7 +43,7 @@ export class Pipeline {
 
   /** Same core for an already-decoded message (e.g. a pump.fun log event) with an exact slot and timestamp. */
   handleParsed(msg: Parsed, slot: number, ts: number): Effects {
-    const fx: Effects = { subscribe: [], unsubscribe: [], enrich: [] };
+    const fx: Effects = { subscribe: [], unsubscribe: [], enrich: [], active: [] };
     const c = this.counters;
     if (msg.kind === 'ignored') c.ignored++;
     else if (msg.kind === 'malformed') c.malformed++;
@@ -62,6 +63,7 @@ export class Pipeline {
         if (msg.kind === 'trade' && msg.side === 'buy' && r.trades === 1 && this.store.isFirst30Buyer(msg.mint, msg.wallet)) {
           fx.enrich.push({ wallet: msg.wallet, priority: false });
         }
+        if (msg.kind === 'trade') fx.active.push(msg.mint);
         if (msg.kind === 'migrate') fx.unsubscribe.push(msg.mint);
       } catch {
         c.write_errors++; // never log the message: it carries attacker-controlled text

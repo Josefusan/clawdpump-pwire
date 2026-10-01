@@ -152,7 +152,7 @@ export interface ScoreSnapshot {           // input to score(); built by buildSn
 
 | Service | Names |
 |---|---|
-| ingest | `PUMPWIRE_DB_PATH`, `PUMPPORTAL_WS_URL`, `SOLANA_RPC_URL`, `SOLANA_WS_URL` (optional; derived from `SOLANA_RPC_URL` when unset), `INGEST_TRADE_SOURCE` (`logs` default when an RPC/WS URL is set, else `pumpportal`), `HELIUS_API_KEY`, `INGEST_TRADE_WINDOW_MIN`, `ENRICH_RPS` |
+| ingest | `PUMPWIRE_DB_PATH`, `PUMPPORTAL_WS_URL`, `SOLANA_RPC_URL`, `SOLANA_WS_URL` (mainnet WS for pump.fun program logs; optional: defaults to Helius mainnet via `HELIUS_API_KEY`, else the public mainnet endpoint), `INGEST_TRADE_SOURCE` (`logs` default; `pumpportal` needs a funded PumpPortal key), `HELIUS_API_KEY`, `INGEST_TRADE_WINDOW_MIN`, `INGEST_MAX_TRACKED` (default 500, min 1; LRU-evicts tracked mints at the cap), `ENRICH_RPS` |
 | score | none (pure) |
 | api | `PORT`, `PUMPWIRE_DB_PATH`, `X402_NETWORK` (CAIP-2), `X402_FACILITATOR_URL`, `PAYTO_ADDRESS`, `USDC_MINT`, `SOLANA_RPC_URL`, `FIRST_PARTY_WALLETS` (comma-separated), `X402_DIRECT_FALLBACK` (`0`/`1`), `X402_MAX_TIMEOUT_S`, `RATE_LIMIT_PER_MIN`; STRETCH: `ANSEM_MINT`, `PWIRE_MINT`, `PWIRE_TIER_MIN_BALANCE`, `JUPITER_QUOTE_URL` |
 | mcp | `PUMPWIRE_API_URL`, `SOLANA_KEYPAIR_PATH`, `SOLANA_RPC_URL`, `PUMPWIRE_SPEND_STATE_PATH`, `PUMPWIRE_NETWORK`, `PUMPWIRE_MAX_PRICE_USD` (default 0.05), `PUMPWIRE_DAILY_CAP_USD` (default 5), `PUMPWIRE_PAY_ASSET` (`USDC`\|`ANSEM`) |

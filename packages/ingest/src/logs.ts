@@ -108,14 +108,16 @@ export function parseLogsNotification(raw: string): LogsBatch | null {
   return out;
 }
 
-/** `SOLANA_WS_URL` or derive from an http(s) RPC URL. Never log the result: it may embed a key. */
-export function wsUrlFrom(env: Record<string, string | undefined>): string | null {
+export const PUBLIC_MAINNET_WS = 'wss://api.mainnet-beta.solana.com';
+/**
+ * Mainnet WS for the pump.fun program logs. pump.fun exists only on mainnet, so this is independent of the payment
+ * network (`SOLANA_RPC_URL` is devnet on the devnet box). Precedence: SOLANA_WS_URL, Helius mainnet via
+ * HELIUS_API_KEY, the public mainnet endpoint. Never log the result: it may embed a key.
+ */
+export function wsUrlFrom(env: Record<string, string | undefined>): string {
   if (env.SOLANA_WS_URL) return env.SOLANA_WS_URL;
-  const rpc = env.SOLANA_RPC_URL;
-  if (!rpc) return null;
-  if (rpc.startsWith('https://')) return 'wss://' + rpc.slice(8);
-  if (rpc.startsWith('http://')) return 'ws://' + rpc.slice(7);
-  return null;
+  if (env.HELIUS_API_KEY) return `wss://mainnet.helius-rpc.com/?api-key=${env.HELIUS_API_KEY}`;
+  return PUBLIC_MAINNET_WS;
 }
 
 export interface LogsCounters { frames: number; notifications: number; failed_tx: number; events: number; reconnects: number }
