@@ -10,7 +10,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "vitest run",
+    "test": "NODE_OPTIONS=--experimental-sqlite vitest run",
     "typecheck": "tsc -b"
   },
   "devDependencies": {
