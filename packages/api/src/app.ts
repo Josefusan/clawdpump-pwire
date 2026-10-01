@@ -12,7 +12,7 @@ import type { PaymentPayload, PaymentRequired, PaymentRequirements } from '@x402
 import { base58Decode, isBase58Pubkey } from './base58.js';
 import { claimPayment, findOwnRow, markFailed, markServed, setTxSig } from './calls.js';
 import { PRICE_BASE_UNITS, type Config } from './config.js';
-import { stubScore, tokenExists, type ScoreFn } from './risk.js';
+import { cachedScore, dbScore, tokenExists, type ScoreFn } from './risk.js';
 import { buildStats } from './stats.js';
 import { hasExactlyMemo } from './tx.js';
 import type { ErrorCode, RiskResult } from './types.js';
@@ -58,7 +58,7 @@ function rateLimiter(limit: number, nowS: () => number) {
 
 export function createApp(deps: Deps) {
   const { db, backend, cfg } = deps;
-  const score = deps.score ?? stubScore;
+  const score = deps.score ?? cachedScore(dbScore);
   const nowS = deps.nowS ?? (() => Math.floor(Date.now() / 1000));
   const allow = rateLimiter(cfg.rateLimitPerMin, nowS);
   let feePayer: string | undefined;
