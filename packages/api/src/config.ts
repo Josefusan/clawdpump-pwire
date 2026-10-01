@@ -1,3 +1,8 @@
+import { fileURLToPath } from 'node:url';
+
+/** Repo-root data/backtest.json regardless of the process cwd (pm2 runs the api with cwd=packages/api). */
+const DEFAULT_BACKTEST_JSON = fileURLToPath(new URL('../../../data/backtest.json', import.meta.url));
+
 export interface Config {
   port: number;
   dbPath: string;
@@ -34,6 +39,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     maxTimeoutS: Number(env.X402_MAX_TIMEOUT_S ?? 60),
     rateLimitPerMin: Number(env.RATE_LIMIT_PER_MIN ?? 60),
     firstPartyWallets: (env.FIRST_PARTY_WALLETS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
-    backtestJsonPath: env.BACKTEST_JSON_PATH ?? 'data/backtest.json',
+    backtestJsonPath: env.BACKTEST_JSON_PATH ?? DEFAULT_BACKTEST_JSON,
   };
 }
