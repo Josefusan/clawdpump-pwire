@@ -6,8 +6,8 @@ const ROOT = path.join(os.homedir(), 'pumpwire-devnet');
 const ENV_FILE = '/home/joseph/.config/pumpwire/devnet.env';
 
 const base = {
-  interpreter: 'node',
-  node_args: ['--env-file=' + ENV_FILE],
+  interpreter: '/home/joseph/pumpwire-node/bin/node',
+  node_args: ['--experimental-sqlite', '--env-file=' + ENV_FILE],
   script: 'dist/index.js',
   exec_mode: 'fork',
   instances: 1,
@@ -21,7 +21,7 @@ const base = {
 
 module.exports = {
   apps: [
-    Object.assign({}, base, { name: 'pumpwire-ingest', cwd: path.join(ROOT, 'packages/ingest') }),
+    Object.assign({}, base, { name: 'pumpwire-ingest', script: 'dist/main.js', cwd: path.join(ROOT, 'packages/ingest') }),
     Object.assign({}, base, { name: 'pumpwire-api-devnet', cwd: path.join(ROOT, 'packages/api') }),
   ],
 };
