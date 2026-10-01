@@ -20,7 +20,7 @@ const PAYER = rndKey();
 
 const cfg: Config = {
   port: 0, dbPath: ':memory:', network: NETWORK, facilitatorUrl: 'http://mock.invalid', payTo: PAYTO,
-  usdcMint: USDC, maxTimeoutS: 60, rateLimitPerMin: 1000, firstPartyWallets: [],
+  usdcMint: USDC, maxTimeoutS: 60, rateLimitPerMin: 1000, firstPartyWallets: [], backtestJsonPath: '/nonexistent/backtest.json',
 };
 
 const shortvec = (n: number) => Buffer.from([n]); // all counts here are < 128

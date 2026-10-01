@@ -1,3 +1,4 @@
+import { readFileSync, statSync } from 'node:fs';
 import type { DatabaseSync } from 'node:sqlite';
 import type { Config } from './config.js';
 import { MODEL_VERSION } from '@pumpwire/score';
@@ -6,6 +7,45 @@ const SERVED = "status = 'served' AND tx_sig IS NOT NULL";
 
 function usdc(baseUnits: number): string {
   return (baseUnits / 1_000_000).toFixed(6);
+}
+
+export interface Backtest {
+  model_version: string;
+  n: number;
+  precision_high_plus: number | null;
+  recall_high_plus: number | null;
+  caveat?: string;
+}
+
+let btCache: { path: string; mtimeMs: number; value: Backtest | null } | undefined;
+
+/** data/backtest.json (scripts/backtest.mjs output), re-read only when its mtime changes; null if absent or malformed. */
+export function readBacktest(path: string): Backtest | null {
+  if (!path) return null;
+  let mtimeMs: number;
+  try {
+    mtimeMs = statSync(path).mtimeMs;
+  } catch {
+    return null;
+  }
+  if (btCache && btCache.path === path && btCache.mtimeMs === mtimeMs) return btCache.value;
+  let value: Backtest | null = null;
+  try {
+    const j = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>;
+    if (typeof j.model_version === 'string' && Number.isInteger(j.n)) {
+      value = {
+        model_version: j.model_version,
+        n: j.n as number,
+        precision_high_plus: typeof j.precision_high_plus === 'number' ? j.precision_high_plus : null,
+        recall_high_plus: typeof j.recall_high_plus === 'number' ? j.recall_high_plus : null,
+        ...(typeof j.caveat === 'string' ? { caveat: j.caveat } : {}),
+      };
+    }
+  } catch {
+    value = null;
+  }
+  btCache = { path, mtimeMs, value };
+  return value;
 }
 
 export function buildStats(db: DatabaseSync, cfg: Config, nowS: number) {
@@ -52,6 +92,6 @@ export function buildStats(db: DatabaseSync, cfg: Config, nowS: number) {
     },
     last_calls,
     caught,
-    backtest: null,
+    backtest: readBacktest(cfg.backtestJsonPath),
   };
 }

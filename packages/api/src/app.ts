@@ -9,6 +9,7 @@ import {
 } from '@x402/core/http';
 import type { FacilitatorClient } from '@x402/core/server';
 import type { PaymentPayload, PaymentRequired, PaymentRequirements } from '@x402/core/types';
+import { livePublicDir } from '@pumpwire/live';
 import { base58Decode, isBase58Pubkey } from './base58.js';
 import { claimPayment, findOwnRow, markFailed, markServed, setTxSig } from './calls.js';
 import { PRICE_BASE_UNITS, type Config } from './config.js';
@@ -98,6 +99,9 @@ export function createApp(deps: Deps) {
 
   const app = express();
   app.disable('x-powered-by');
+
+  // Public proof page (packages/live): static, no secrets, reads /v1/stats client-side.
+  app.use('/live', express.static(livePublicDir(), { index: 'index.html', fallthrough: false }));
 
   app.get('/health', (_req, res) => {
     try {
