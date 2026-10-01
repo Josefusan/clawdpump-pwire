@@ -1,6 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { Config } from './config.js';
-import { STUB_MODEL_VERSION } from './risk.js';
+import { MODEL_VERSION } from '@pumpwire/score';
 
 const SERVED = "status = 'served' AND tx_sig IS NOT NULL";
 
@@ -38,7 +38,7 @@ export function buildStats(db: DatabaseSync, cfg: Config, nowS: number) {
     .all();
 
   return {
-    model_version: STUB_MODEL_VERSION,
+    model_version: MODEL_VERSION,
     network: cfg.network,
     generated_at: nowS,
     totals: {

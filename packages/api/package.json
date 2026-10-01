@@ -11,6 +11,7 @@
     "test": "NODE_OPTIONS=--experimental-sqlite vitest run --root ../.. packages/api"
   },
   "dependencies": {
+    "@pumpwire/score": "*",
     "@x402/core": "^2.28.0",
     "@x402/express": "^2.28.0",
     "@x402/svm": "^2.28.0",
