@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PumpWire · live</title>
+<meta name="description" content="PumpWire sells pump.fun rug-risk scores to agents per call over x402. Every paid call is a Solana transaction. This page shows them live.">
+<style>
+  html, body { max-width: 100%; overflow-x: hidden; }
+  :root { --bg:#0b0d10; --card:#14181d; --line:#232a32; --fg:#e8edf2; --muted:#8b97a5; --ok:#39d98a; --warn:#ffb020; --bad:#ff5c5c; --link:#7cc4ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.45 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  header { display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 16px; margin-bottom: 12px; }
+  h1 { font-size: 22px; margin:0; } h1 span { color: var(--muted); font-weight:400; }
+  h2 { font-size: 15px; margin: 20px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .counters { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .counter { background: var(--card); border:1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .counter .value { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .counter .label { color: var(--muted); font-size: 12px; }
+  .split, .backtest, .error { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .error { color: var(--warn); min-height: 1em; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; background: var(--card); border:1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th, td { text-align:left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; }
+  tr:last-child td { border-bottom: 0; }
+  tr.first-party td { color: #c9d3dd; }
+  td.empty { color: var(--muted); white-space: normal; }
+  a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+  pre { background: var(--card); border:1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x:auto; font-size: 12.5px; }
+  footer { color: var(--muted); font-size: 12px; margin: 24px 0 8px; }
+  @media (max-width: 480px) { h1 { font-size: 19px; } .counter .value { font-size: 20px; } th, td { padding: 7px 8px; } }
+</style>
+</head>
+<body>
+<main data-live-root>
+  <header>
+    <h1>PumpWire <span>· live paid calls</span></h1>
+    <div class="meta">network <strong data-network>—</strong> · model <strong data-model>—</strong> · updated <span data-updated>—</span></div>
+  </header>
+  <p class="meta">Agents pay PumpWire $0.01 USDC per <code>rug_risk_score(mint)</code> over x402. Every call below is a real Solana transaction.</p>
+  <div class="error" data-error></div>
+
+  <h2>Totals</h2>
+  <div class="counters" data-counters></div>
+  <div class="split" data-split>—</div>
+
+  <h2>Last 50 calls</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>when</th><th>tool</th><th>mint</th><th>score</th><th>payment tx</th><th>payer</th><th>party</th><th>latency</th></tr></thead>
+      <tbody data-calls></tbody>
+    </table>
+  </div>
+
+  <h2>Caught it</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>mint</th><th>scored</th><th>outcome</th></tr></thead>
+      <tbody data-caught></tbody>
+    </table>
+  </div>
+
+  <h2>Backtest</h2>
+  <div class="backtest" data-backtest>—</div>
+
+  <h2>Integrate in 2 minutes</h2>
+<pre>npm i @x402/fetch @x402/svm @solana/kit
+import { x402Client, wrapFetchWithPayment } from '@x402/fetch';
+import { ExactSvmScheme } from '@x402/svm/exact/client';
+const client = new x402Client().register('solana:*', new ExactSvmScheme(yourSigner));
+const pay = wrapFetchWithPayment(fetch, client);
+const risk = await (await pay(`${API}/v1/risk/${mint}`)).json(); // $0.01 USDC per call</pre>
+  <p class="meta">MCP: <code>npx pumpwire-mcp</code> exposes <code>rug_risk_score(mint)</code> and pays from your own wallet. First-party calls (our Scout) are always labelled.</p>
+
+  <footer>PumpWire ($PWIRE) · AnsemHack Clawrena · built on ClawPump × pump.fun · risk scores are signals, not advice.</footer>
+</main>
+<script type="module" src="/live/live.js"></script>
+</body>
+</html>
