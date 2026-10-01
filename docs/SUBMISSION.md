@@ -55,10 +55,21 @@ Each Solscan link should show a successful transaction with a 0.01 USDC transfer
 
 ### Mainnet
 
-`{{MAINNET_TXS}}`
+PumpWire went live on Solana mainnet on 2026-10-01 at 21:37Z. The Scout agent pays the API in real
+USDC (mint `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`) through the PayAI facilitator.
 
-Mainnet is not live yet. When it is, this section lists the first paid mainnet calls as
-`https://solscan.io/tx/<sig>` links, with the counts from `/v1/stats` and the UTC time they were read.
+| Item | Value | Source |
+|---|---|---|
+| Paid calls (mainnet) | 250: 250 first-party, 0 third-party | `GET /v1/stats`, 2026-10-01 22:54:52Z |
+| USDC paid over x402 | 2.500000 USDC | same |
+| Network | `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` (mainnet) | same |
+| First mainnet tx | https://solscan.io/tx/2g4VYTEXJHv3ERz2j37JKQH5ppMKuoH8yZAvT4rvp6bqFjUC7yCCAcE525fVVuXyVix7ziCWnreaMUDGsyqPGLu | finalized, slot 452410434 |
+| Mainnet tx 2 | https://solscan.io/tx/5RVyKA9XM7vrbRitLUG4PxGmUgwcz6dKNxZ9MAkt6HJMDiLAPkdvkBmhkxKqGxytg4dFVdrYQQLV3YXHL1VZK9Ec | `/v1/stats` `last_calls` |
+| Mainnet tx 3 | https://solscan.io/tx/2xxxJgUs8cRfnvsGB2d2UXDcGHAFTjG5PQuPoJqApHvYKBN98SvMVc3WGqxeeMqCbzfxVjWuwQcq6HTqRVQuwjPP | same |
+
+Each link shows 0.01 USDC from the Scout wallet `DtGk…p5Mf` to the payee `6TeX…c8Se`. The fee payer
+is the facilitator (`CjNF…eKww`), not the Scout. All of these calls are first-party: PumpWire paying
+itself to prove the rail works. They are not customer revenue.
 
 ## 4. Try it in 5 minutes
 

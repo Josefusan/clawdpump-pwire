@@ -12,7 +12,7 @@ transaction. $ANSEM payment and a $PWIRE holder tier are planned (not live yet).
 
 **AnsemHack Clawrena** · Track: **ClawPump × pump.fun** (+ auto-entered for Overall Winner)
 
-![status](https://img.shields.io/badge/status-devnet%20live%20%C2%B7%20mainnet%20cutover%20pending-blue)
+![status](https://img.shields.io/badge/status-mainnet%20live-brightgreen)
 ![network](https://img.shields.io/badge/network-Solana-9945FF)
 ![payments](https://img.shields.io/badge/payments-x402-00A3FF)
 
@@ -30,7 +30,7 @@ transaction. $ANSEM payment and a $PWIRE holder tier are planned (not live yet).
 - **Proof it is being used:** `GET /v1/stats` and the `/live` page split first-party calls (ours) from third-party calls (yours).
 
 The MCP package is `@pumpwire/mcp` (private, not on npm): clone, `npm ci`, `npm run build -w @pumpwire/mcp`, entry
-point `packages/mcp/dist/index.js`. The API runs on **devnet** today; the public URL lands here at mainnet cutover.
+point `packages/mcp/dist/index.js`. The API runs on **Solana mainnet** (live since 2026-10-01; first paid calls in [docs/SUBMISSION.md](docs/SUBMISSION.md)).
 Every call is risk information, not advice.
 
 ## The problem
@@ -54,7 +54,7 @@ Paid MCP tools, priced per call and settled onchain over x402.
 
 ## How it gets paid (x402 on Solana)
 
-- **Rails:** x402 `exact` scheme on Solana (devnet now, mainnet at cutover). $0.01 USDC per `rug_risk_score` call.
+- **Rails:** x402 `exact` scheme on Solana (mainnet live; devnet for testing). $0.01 USDC per `rug_risk_score` call.
 - **USDC** is the only accepted asset today. **Planned:** $ANSEM at a 10% discount (Token-2022 rail not yet verified
   with the facilitator) and a **$PWIRE holder tier** (discount + priority; payer signs a nonce, server checks balance).
 - **Payee (`payTo`):** the PumpWire agent wallet. Keys live **only** in the VPS `.env`, never in this repo.
@@ -215,7 +215,7 @@ Clone them with `git submodule update --init --recursive`.
 |---|---|---|
 | Thu Oct 1, 24:00 UTC−5 | Register + tokenize | ✅ Done |
 | Thu Oct 1 | MVP code-complete on devnet (ingest, scorer, x402 API, MCP, Scout, /live) | ✅ Done |
-| **Sat Oct 3, 11:59 PM CT** | **MVP LIVE on mainnet + first paid calls** | ⏳ |
+| **Sat Oct 3, 11:59 PM CT** | **MVP LIVE on mainnet + first paid calls** | ✅ (Oct 1) |
 | Sun Oct 4 – Tue Oct 6 | Stretch: deployer history, $ANSEM + holder tier (planned, not enabled), alerts | ⏳ |
 | Wed Oct 7 | Judging closes — everything live | ⏳ |
 | Thu Oct 8 | Winners announced | — |
