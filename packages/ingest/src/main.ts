@@ -2,6 +2,7 @@ import { openDb, Store } from './db.js';
 import { Pipeline } from './pipeline.js';
 import { SlotClock, fetchSlot } from './slot.js';
 import { backoffMs } from './backoff.js';
+import { EnrichQueue, resolveApiKey } from './enrich.js';
 
 const WS_URL = process.env.PUMPPORTAL_WS_URL ?? 'wss://pumpportal.fun/api/data';
 const DB_PATH = process.env.PUMPWIRE_DB_PATH ?? process.env.DB_PATH;
@@ -18,6 +19,8 @@ if (!DB_PATH) {
 const db = openDb(DB_PATH);
 const clock = new SlotClock();
 const pipe = new Pipeline(new Store(db), clock);
+const enrich = new EnrichQueue(db, { apiKey: resolveApiKey(process.env), rps: Number(process.env.ENRICH_RPS) || undefined });
+const stopEnrich = enrich.start();
 const tracked = new Map<string, number>(); // mint -> expiry ms (bounded)
 
 let ws: WebSocket | null = null;
@@ -47,6 +50,7 @@ function connect(): void {
       tracked.set(m, now + WINDOW_MS);
       pending.push(m);
     }
+    for (const e of fx.enrich) enrich.enqueue(e.wallet, e.priority);
     if (fx.unsubscribe.length) {
       fx.unsubscribe.forEach((m) => tracked.delete(m));
       sendKeys('unsubscribeTokenTrade', fx.unsubscribe);
@@ -83,10 +87,11 @@ if (RPC_URL) {
   setInterval(() => void sync(), 15_000);
 }
 
-setInterval(() => console.log('ingest: stats', JSON.stringify({ ...pipe.counters, tracked: tracked.size })), 10_000);
+setInterval(() => console.log('ingest: stats', JSON.stringify({ ...pipe.counters, tracked: tracked.size, enrich_depth: enrich.depth, enrich: enrich.counters })), 10_000);
 
 const stop = () => {
   console.log('ingest: stopping', JSON.stringify(pipe.counters));
+  stopEnrich();
   db.close();
   process.exit(0);
 };

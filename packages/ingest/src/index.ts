@@ -8,3 +8,5 @@ export type { Counters, Effects } from './pipeline.js';
 export { SlotClock } from './slot.js';
 export { backoffMs } from './backoff.js';
 export { cleanText, isAddress, isSig, LIMITS } from './sanitize.js';
+export { EnrichQueue, parseWalletProfile, fetchEnhancedAsc, resolveApiKey } from './enrich.js';
+export type { WalletProfile, EnrichCounters, EnrichOptions, InboundTransfer } from './enrich.js';

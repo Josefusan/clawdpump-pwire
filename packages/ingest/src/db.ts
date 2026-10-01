@@ -26,6 +26,7 @@ export class Store {
   private readonly upDeployer;
   private readonly insTrade;
   private readonly upMigrate;
+  private readonly firstBuyers;
 
   constructor(private readonly db: DatabaseSync) {
     this.insToken = db.prepare(
@@ -39,6 +40,11 @@ export class Store {
     this.insTrade = db.prepare(
       `INSERT INTO trades (sig, mint, wallet, side, lamports, token_amount, slot, ts)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(sig) DO NOTHING`,
+    );
+    this.firstBuyers = db.prepare(
+      `SELECT t.wallet FROM trades t JOIN tokens k ON k.mint = t.mint
+       WHERE t.mint = ? AND t.side = 'buy' AND t.wallet != k.deployer
+       GROUP BY t.wallet ORDER BY MIN(t.slot), MIN(t.sig) LIMIT 30`,
     );
     this.upMigrate = db.prepare(`UPDATE tokens SET migrated = 1, curve_pct = 100 WHERE mint = ? AND migrated = 0`);
   }
@@ -68,6 +74,11 @@ export class Store {
     if (Number(ins.changes) === 1) r.trades = 1;
     else r.duplicate = true;
     return r;
+  }
+
+  /** True if `wallet` is among the first 30 distinct non-deployer buyers of `mint` (by slot, sig). */
+  isFirst30Buyer(mint: string, wallet: string): boolean {
+    return (this.firstBuyers.all(mint) as { wallet: string }[]).some((r) => r.wallet === wallet);
   }
 
   /** Writes one parsed message. slot/ts are ingest-derived (the feed has neither). */

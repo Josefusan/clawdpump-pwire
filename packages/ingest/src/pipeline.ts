@@ -25,6 +25,7 @@ export const newCounters = (): Counters => ({
 export interface Effects {
   subscribe: string[];   // newly created mints: subscribe to their trades
   unsubscribe: string[]; // migrated mints: stop trade subscription
+  enrich: { wallet: string; priority: boolean }[]; // deployer (priority) + first-30 buyers
 }
 
 /** Socket-free core: raw frame in, DB rows + counters + subscription effects out. */
@@ -34,7 +35,7 @@ export class Pipeline {
   constructor(private readonly store: Store, private readonly clock: SlotClock) {}
 
   handle(raw: string, nowMs: number = Date.now()): Effects {
-    const fx: Effects = { subscribe: [], unsubscribe: [] };
+    const fx: Effects = { subscribe: [], unsubscribe: [], enrich: [] };
     const c = this.counters;
     c.frames++;
     const msg = parseFrame(raw);
@@ -52,6 +53,10 @@ export class Pipeline {
         c.rows_deployers += r.deployers;
         if (r.duplicate) c.duplicates++;
         if (msg.kind === 'create' && r.tokens === 1) fx.subscribe.push(msg.mint);
+        if (msg.kind === 'create' && r.tokens === 1) fx.enrich.push({ wallet: msg.deployer, priority: true });
+        if (msg.kind === 'trade' && msg.side === 'buy' && r.trades === 1 && this.store.isFirst30Buyer(msg.mint, msg.wallet)) {
+          fx.enrich.push({ wallet: msg.wallet, priority: false });
+        }
         if (msg.kind === 'migrate') fx.unsubscribe.push(msg.mint);
       } catch {
         c.write_errors++; // never log the message: it carries attacker-controlled text
