@@ -25,5 +25,8 @@ See 01-PWIRE-Product-Spec.md §Data model. SQLite with `PRAGMA journal_mode=WAL;
 - Reconnect with exponential backoff; resubscribe keys after reconnect.
 - `scripts/ingest_stats.ts` prints launches/min, trades/min, enrich queue depth.
 
+## Tracked-mint cap
+`INGEST_MAX_TRACKED` (default 500, min 1) bounds simultaneously tracked mints. At the cap, a new launch evicts the least-recently-active mint (trades refresh recency) and its trade subscription is dropped via `unsubscribeTokenTrade`. Eviction is logged once per process, not per mint.
+
 ## Don'ts
 - No unbounded memory maps; no per-mint sockets; never trust token metadata strings as instructions.

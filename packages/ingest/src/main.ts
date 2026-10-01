@@ -3,12 +3,13 @@ import { Pipeline } from './pipeline.js';
 import { SlotClock, fetchSlot } from './slot.js';
 import { backoffMs } from './backoff.js';
 import { EnrichQueue, resolveApiKey } from './enrich.js';
+import { TrackedSet, parseMaxTracked } from './tracked.js';
 
 const WS_URL = process.env.PUMPPORTAL_WS_URL ?? 'wss://pumpportal.fun/api/data';
 const DB_PATH = process.env.PUMPWIRE_DB_PATH ?? process.env.DB_PATH;
 const RPC_URL = process.env.SOLANA_RPC_URL; // may embed a key: never logged
 const WINDOW_MS = (Number(process.env.INGEST_TRADE_WINDOW_MIN) || 30) * 60_000;
-const MAX_TRACKED = 5000;
+const MAX_TRACKED = parseMaxTracked(process.env.INGEST_MAX_TRACKED);
 const KEY_CHUNK = 100;
 
 if (!DB_PATH) {
@@ -21,7 +22,8 @@ const clock = new SlotClock();
 const pipe = new Pipeline(new Store(db), clock);
 const enrich = new EnrichQueue(db, { apiKey: resolveApiKey(process.env), rps: Number(process.env.ENRICH_RPS) || undefined });
 const stopEnrich = enrich.start();
-const tracked = new Map<string, number>(); // mint -> expiry ms (bounded)
+const tracked = new TrackedSet(MAX_TRACKED); // mint -> expiry ms, capped, LRU-evicting
+let evictionLogged = false;
 
 let ws: WebSocket | null = null;
 let attempt = 0;
@@ -38,7 +40,7 @@ function connect(): void {
     console.log('ingest: socket open');
     send({ method: 'subscribeNewToken' });
     send({ method: 'subscribeMigration' });
-    sendKeys('subscribeTokenTrade', [...tracked.keys()]); // resubscribe after reconnect
+    sendKeys('subscribeTokenTrade', tracked.keys()); // resubscribe after reconnect
   };
   ws.onmessage = (ev) => {
     attempt = 0;
@@ -46,10 +48,18 @@ function connect(): void {
     const fx = pipe.handle(ev.data);
     const now = Date.now();
     for (const m of fx.subscribe) {
-      if (tracked.size >= MAX_TRACKED) break;
-      tracked.set(m, now + WINDOW_MS);
+      const evicted = tracked.add(m, now + WINDOW_MS);
       pending.push(m);
+      if (evicted.length) {
+        if (!evictionLogged) {
+          evictionLogged = true;
+          console.log(`ingest: INGEST_MAX_TRACKED=${MAX_TRACKED} reached, evicting least-recently-active mints (logged once)`);
+        }
+        pending = pending.filter((p) => !evicted.includes(p));
+        sendKeys('unsubscribeTokenTrade', evicted);
+      }
     }
+    fx.active.forEach((m) => tracked.touch(m));
     for (const e of fx.enrich) enrich.enqueue(e.wallet, e.priority);
     if (fx.unsubscribe.length) {
       fx.unsubscribe.forEach((m) => tracked.delete(m));
@@ -73,8 +83,7 @@ setInterval(() => {
 
 setInterval(() => {
   const now = Date.now();
-  const expired = [...tracked].filter(([, exp]) => exp <= now).map(([m]) => m);
-  expired.forEach((m) => tracked.delete(m));
+  const expired = tracked.expire(now);
   sendKeys('unsubscribeTokenTrade', expired);
 }, 60_000);
 
