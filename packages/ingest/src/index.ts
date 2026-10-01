@@ -10,3 +10,5 @@ export { backoffMs } from './backoff.js';
 export { cleanText, isAddress, isSig, LIMITS } from './sanitize.js';
 export { EnrichQueue, parseWalletProfile, fetchEnhancedAsc, resolveApiKey } from './enrich.js';
 export type { WalletProfile, EnrichCounters, EnrichOptions, InboundTransfer } from './enrich.js';
+export { LogsSource, decodeEvent, parseLogsNotification, wsUrlFrom, base58, PUMP_PROGRAM, DISCRIMINATOR } from './logs.js';
+export type { LogEvent, LogsBatch, LogsCounters } from './logs.js';

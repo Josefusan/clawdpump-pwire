@@ -6,7 +6,8 @@ description: Build and run PumpWire's pump.fun ingestion (new launches, trades, 
 # PumpWire Ingest
 
 ## Sources (VERIFY endpoints and limits before relying on them)
-- **PumpPortal WebSocket** `wss://pumpportal.fun/api/data`: send `{"method":"subscribeNewToken"}`; per mint `{"method":"subscribeTokenTrade","keys":[mint,...]}`; per wallet `subscribeAccountTrade`; migrations `subscribeMigration`. Use ONE connection and add keys to it; don't open a socket per mint.
+- **Trades: Solana RPC `logsSubscribe` on the pump.fun program** (`INGEST_TRADE_SOURCE=logs`, default): decode `TradeEvent`/`CreateEvent`/`CompleteEvent` from `Program data:` lines (`packages/ingest/src/logs.ts`); one subscription, no API key. Keep trades only for mints inside the trade window.
+- **PumpPortal WebSocket** `wss://pumpportal.fun/api/data`: send `{"method":"subscribeNewToken"}` and `subscribeMigration` (free). `subscribeTokenTrade` needs a funded PumpPortal key; only used with `INGEST_TRADE_SOURCE=pumpportal`. Use ONE connection and add keys to it; don't open a socket per mint.
 - **Helius** (free credits from AnsemHack registration): RPC + Enhanced Transactions to find each early buyer's **funder** (first inbound SOL transfer) and wallet age / tx count.
 - Fallbacks: Bitquery pump.fun API, bloXroute new-token stream.
 

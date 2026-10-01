@@ -34,3 +34,9 @@ to `PAYTO_ADDRESS`'s ATA, token = mainnet USDC `EPjFWdd5…Dt1v`. Also check `ht
 
 **Rollback (one command)**: `scripts/cutover-mainnet.sh --rollback` — stops `pumpwire-api` (mainnet API off) and moves
 `pumpwire-ingest` back to the devnet definition. Logs: `pm2 logs pumpwire-api --lines 100 --nostream`.
+
+## Trade source (T-028)
+
+Ingest reads trades from pump.fun program events over Solana RPC `logsSubscribe` (`INGEST_TRADE_SOURCE=logs`, the default whenever `SOLANA_RPC_URL` or `SOLANA_WS_URL` is set). No API key and no per-mint subscription: one subscription on the pump.fun program; `TradeEvent`/`CreateEvent`/`CompleteEvent` are decoded from `Program data:` log lines and validated like any other untrusted input. Trades are stored only for mints created inside the last `INGEST_TRADE_WINDOW_MIN` minutes. PumpPortal stays connected for `subscribeNewToken`/`subscribeMigration` (free); set `INGEST_TRADE_SOURCE=pumpportal` to go back to `subscribeTokenTrade` (needs a funded PumpPortal key).
+
+Health: the 10 s `ingest: stats` line carries `trade_source` and `logs: {frames, notifications, failed_tx, events, reconnects}`; `trades` and `rows_trades` must climb within a minute of start. If `logs.reconnects` climbs and `events` does not, the RPC provider's WS is rejecting `logsSubscribe` (rate limit or unsupported): point `SOLANA_WS_URL` at a provider that supports it (Helius does; the public `wss://api.mainnet-beta.solana.com` works but is rate limited).
