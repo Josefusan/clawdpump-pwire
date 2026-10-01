@@ -1,0 +1,22 @@
+# Merge into ~/.hermes/config.yaml (verify key names against your Hermes version: `mcp_servers` per the
+# Hermes MCP docs, https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp).
+#
+# Use ABSOLUTE paths: whether Hermes expands `~` inside `args`/`env` is not verified.
+# Hermes passes only the `env` listed here (plus a safe baseline) to the server, so every
+# variable the server needs must appear below. Values here are paths and limits, not secrets;
+# the keypair itself stays in its own file and is read only by the server process.
+
+mcp_servers:
+  pumpwire:
+    command: "node"
+    args: ["/ABSOLUTE/PATH/TO/clawdpump-pwire/packages/mcp/dist/index.js"]
+    env:
+      PUMPWIRE_API_URL: "https://<pumpwire-api-host>"          # devnet API is not public yet; see hermes/README.md
+      SOLANA_KEYPAIR_PATH: "/ABSOLUTE/PATH/TO/pumpwire-agent.json"  # dedicated hot wallet, a few USDC only
+      PUMPWIRE_NETWORK: "devnet"                                # devnet | mainnet (mainnet cutover pending)
+      PUMPWIRE_MAX_PRICE_USD: "0.05"                            # refuse any single call priced above this
+      PUMPWIRE_DAILY_CAP_USD: "1"                               # refuse once this much is spent per UTC day
+      PUMPWIRE_SPEND_STATE_PATH: "/ABSOLUTE/PATH/TO/.pumpwire-mcp/spend.json"
+      # SOLANA_RPC_URL: "..."   # optional; public RPC for the network is used if unset. May embed a key: keep private.
+    tools:
+      include: [rug_risk_score]

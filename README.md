@@ -7,12 +7,12 @@
 PumpWire watches every **pump.fun** launch, bonding curve and dev wallet on Solana — then sells
 what it finds as **MCP tools**: rug-risk scores, early-buyer cluster maps and repeat-deployer alerts.
 
-Other agents pay **per call over [x402](https://x402.org)** in USDC or $ANSEM, so every request is an
-onchain transaction. **$PWIRE holders get discounted, priority access.**
+Other agents pay **per call over [x402](https://x402.org)** in USDC, so every request is an onchain
+transaction. $ANSEM payment and a $PWIRE holder tier are planned (not live yet).
 
 **AnsemHack Clawrena** · Track: **ClawPump × pump.fun** (+ auto-entered for Overall Winner)
 
-![status](https://img.shields.io/badge/status-building-orange)
+![status](https://img.shields.io/badge/status-devnet%20live%20%C2%B7%20mainnet%20cutover%20pending-blue)
 ![network](https://img.shields.io/badge/network-Solana-9945FF)
 ![payments](https://img.shields.io/badge/payments-x402-00A3FF)
 ![runtime](https://img.shields.io/badge/runtime-Hermes%20%2F%20claw--agent-black)
@@ -20,6 +20,17 @@ onchain transaction. **$PWIRE holders get discounted, priority access.**
 </div>
 
 ---
+
+## Use it in 5 minutes
+
+- **Hermes / claw-agent:** [`hermes/`](./hermes/README.md) — register the MCP server, drop in the skill, ask *"rug check `<mint>`"*.
+- **Any MCP client (Claude Code, Claude Desktop, Cursor):** the config block is in [`docs/USE-CASES.md`](./docs/USE-CASES.md#b-claude-code--claude-desktop-mcp-config--sample-prompt).
+- **Any language over HTTP:** `GET /v1/risk/:mint` → `402` with the price → pay → `200`. Runnable: [`examples/x402-fetch.mjs`](./examples/README.md).
+- **Proof it is being used:** `GET /v1/stats` and the `/live` page split first-party calls (ours) from third-party calls (yours).
+
+The MCP package is `@pumpwire/mcp` (private, not on npm): clone, `npm ci`, `npm run build -w @pumpwire/mcp`, entry
+point `packages/mcp/dist/index.js`. The API runs on **devnet** today; the public URL lands here at mainnet cutover.
+Every call is risk information, not advice.
 
 ## The problem
 
@@ -42,17 +53,16 @@ Paid MCP tools, priced per call and settled onchain over x402.
 
 ## How it gets paid (x402 on Solana)
 
-- **Rails:** x402 `exact` scheme, Solana mainnet.
-- **USDC** is the default; **$ANSEM** is accepted at spot **10% cheaper** to drive net-new $ANSEM volume.
-- **$PWIRE holder tier:** wallets holding ≥ threshold $PWIRE get **50% off** and priority queue
-  (payer signs a nonce; the server checks balance and returns discounted `PaymentRequirements`).
+- **Rails:** x402 `exact` scheme on Solana (devnet now, mainnet at cutover). $0.01 USDC per `rug_risk_score` call.
+- **USDC** is the only accepted asset today. **Planned:** $ANSEM at a 10% discount (Token-2022 rail not yet verified
+  with the facilitator) and a **$PWIRE holder tier** (discount + priority; payer signs a nonce, server checks balance).
 - **Payee (`payTo`):** the PumpWire agent wallet. Keys live **only** in the VPS `.env`, never in this repo.
 
 ## Architecture
 
 ```
 pump.fun (onchain)
-   │  PumpPortal WS (new tokens, trades)  +  Helius RPC / Enhanced Tx (funding sources)
+   │  Solana RPC logsSubscribe (pump.fun events: creates, trades, migrations)  +  Helius Enhanced Tx (funding sources)
    ▼
 [ingest]  Node/TS worker ──► SQLite (WAL)  tokens · trades · wallets · deployers · funding_edges
    ▼
@@ -61,14 +71,14 @@ pump.fun (onchain)
 [api]     Express + @x402/express  → GET /v1/risk/:mint  /v1/deployer/:wallet  /v1/early-buyers/:mint
           free: GET /health  GET /live (public dashboard)  GET /v1/stats
    ▼
-[mcp]     npm pumpwire-mcp (stdio + streamable HTTP) — wraps the paid API with @x402/fetch, paid by the CALLER's wallet
+[mcp]     pumpwire-mcp (private; run from packages/mcp/dist/index.js) (stdio + streamable HTTP) — wraps the paid API with @x402/fetch, paid by the CALLER's wallet
    ▼
-[scout]   Hermes / claw-agent "PWIRE Scout": watches launches, pays for scores, posts HIGH/EXTREME alerts
+[scout]   Hermes / claw-agent "PWIRE Scout": watches launches, pays for scores, drafts HIGH/EXTREME alerts for approval (never posts)
 ```
 
 ```mermaid
 flowchart TD
-    A[pump.fun onchain] -->|PumpPortal WS + Helius| B[ingest worker]
+    A[pump.fun onchain] -->|RPC logsSubscribe + Helius| B[ingest worker]
     B --> C[(SQLite WAL)]
     C --> D["score(mint, snapshot) → reasons[]"]
     D --> E["x402 API /v1/risk, /v1/deployer, /v1/early-buyers"]
@@ -128,21 +138,19 @@ Backtested on ~200 labeled historical launches; precision at `HIGH+` is publishe
 
 ## Quickstart
 
-> **Status:** this is the spec-first seed commit. The packages below land per the plan in
-> [`02-AnsemHack-Rules-and-Win-Plan.md`](./docs/kit/02-AnsemHack-Rules-and-Win-Plan.md); each is marked once it ships.
-
 ```bash
-# 1 · clone (submodules included)
-git clone --recurse-submodules git@github.com:Josefusan/clawdpump-pwire.git
-cd clawdpump-pwire
+# 1 · clone and build (Node 22; npm workspaces)
+git clone https://github.com/Josefusan/clawdpump-pwire.git && cd clawdpump-pwire
+npm ci && npm run build --workspaces --if-present
+npm test                             # vitest across all packages
 
-# 2 · configure secrets (never committed)
-cp .env.example .env && chmod 600 .env
-#   HELIUS_API_KEY, PAYTO_ADDRESS, SCOUT_KEYPAIR_PATH, CLAWPUMP_API_KEY
+# 2 · secrets live OUTSIDE the repo (see env.example for the NAMES only)
+#    ~/.config/pumpwire/devnet.env, chmod 600
 
-# 3 · run the stack (target layout)
-pnpm --filter @pumpwire/ingest dev   # pump.fun → SQLite
-pnpm --filter @pumpwire/api     dev   # x402 API + /live
+# 3 · run the stack
+node --experimental-sqlite --env-file=$HOME/.config/pumpwire/devnet.env packages/ingest/dist/main.js   # pump.fun → SQLite
+node --experimental-sqlite --env-file=$HOME/.config/pumpwire/devnet.env packages/api/dist/index.js     # x402 API + /live
+# production: pm2 start ecosystem.devnet.config.cjs  (ingest, api, scout); docs/RUNBOOK.md
 ```
 
 ## Integrate in 2 minutes
@@ -150,19 +158,26 @@ pnpm --filter @pumpwire/api     dev   # x402 API + /live
 Any MCP-capable agent can buy PumpWire intel with its **own** wallet — no signup, no API keys:
 
 ```jsonc
-// add to your MCP client config
+// add to your MCP client config (absolute paths; the server reads only the env you list)
 {
   "mcpServers": {
     "pumpwire": {
-      "command": "npx",
-      "args": ["-y", "pumpwire-mcp"],
-      "env": { "SOLANA_KEYPAIR": "~/.config/solana/agent.json" }
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/clawdpump-pwire/packages/mcp/dist/index.js"],
+      "env": {
+        "PUMPWIRE_API_URL": "https://<pumpwire-api-host>",
+        "SOLANA_KEYPAIR_PATH": "/ABSOLUTE/PATH/TO/agent-wallet.json",
+        "PUMPWIRE_NETWORK": "devnet",
+        "PUMPWIRE_MAX_PRICE_USD": "0.05",
+        "PUMPWIRE_DAILY_CAP_USD": "1"
+      }
     }
   }
 }
 ```
 
-Then ask: *"What's the rug risk on `<mint>`?"* — the call is paid in USDC (or $ANSEM) and settles onchain.
+Then ask: *"What's the rug risk on `<mint>`?"* — the call is paid in USDC from the agent's own wallet and settles
+onchain. Caps are enforced before anything is signed. Full walkthroughs: [`docs/USE-CASES.md`](./docs/USE-CASES.md).
 
 ## Agent skills
 
@@ -174,8 +189,8 @@ Hermes skills directory as `<name>/SKILL.md`.
 | `clawrena-compliance` | hackathon rules + guardrails — **load in every agent** |
 | `pumpwire-ingest` | pump.fun launch/trade/wallet ingestion |
 | `pumpwire-rug-risk` | the scoring engine and its backtest |
-| `pumpwire-x402-api` | paid HTTP API, pricing, USDC / $ANSEM / $PWIRE tier |
-| `pumpwire-mcp` | the MCP client other agents install |
+| `pumpwire-x402-api` | paid HTTP API, pricing, USDC (live); $ANSEM + $PWIRE tier planned, not enabled |
+| `pumpwire-mcp` | the MCP client other agents install (private; run from packages/mcp/dist/index.js) |
 | `pumpwire-scout` | the live buyer/alert agent on ClawPump (Hermes) |
 | `build-in-public` | X posts, `/live` page, stream prep |
 
@@ -197,9 +212,9 @@ Clone them with `git submodule update --init --recursive`.
 | Deadline (CT) | Milestone | Status |
 |---|---|---|
 | Thu Oct 1, 24:00 UTC−5 | Register + tokenize | ✅ Done |
-| Fri Oct 2, 11:59 PM | MVP code-complete on devnet | ⏳ |
-| **Sat Oct 3, 11:59 PM** | **MVP LIVE on mainnet + first paid calls** | ⏳ |
-| Sun Oct 4 – Tue Oct 6 | Stretch: deployer history, $ANSEM, holder tier, alerts | ⏳ |
+| Thu Oct 1 | MVP code-complete on devnet (ingest, scorer, x402 API, MCP, Scout, /live) | ✅ Done |
+| **Thu Oct 1 – Fri Oct 2** | **MVP LIVE on mainnet + first paid calls** | ⏳ |
+| Sat Oct 3 – Tue Oct 6 | Stretch: deployer history, $ANSEM + holder tier (planned, not enabled), alerts | ⏳ |
 | Wed Oct 7 | Judging closes — everything live | ⏳ |
 | Thu Oct 8 | Winners announced | — |
 
