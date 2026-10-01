@@ -17,8 +17,8 @@
 | Agent | Model / runtime | Owns | Never does |
 |---|---|---|---|
 | **Jev** | Claude (Opus/Sonnet class) as orchestrator | Plan, task board (`TASKS.md`), assigning work, running gates, daily 9 AM + 9 PM CT status to Mises, scope cuts | Writes large code itself; approves its own gates |
-| **Claude Architect** | Claude Code on Contabo | Architecture, interfaces, scoring design, security review, final code review on every PR | Merges without Mises |
-| **Claude Builder** | Claude Code on Contabo (separate worktree) | x402 API, MCP package, ingest core, deploy scripts, tests | Touches keys or mainnet config |
+| **Claude Architect** | Claude Code on a small VPS | Architecture, interfaces, scoring design, security review, final code review on every PR | Merges without Mises |
+| **Claude Builder** | Claude Code on a small VPS (separate worktree) | x402 API, MCP package, ingest core, deploy scripts, tests | Touches keys or mainnet config |
 | **DeepSeek Workers** | DeepSeek chat model (bulk) + DeepSeek reasoner (second opinion), via API or OpenRouter | Parsers, fixtures, labeling ~200 historical launches, docs, X drafts, second-opinion review of scoring logic | Final decisions, prod deploys, anything with secrets |
 | **PumpWire (seller)** | Hermes / claw-agent tied to the $PWIRE ClawPump agent | Public face of the product on ClawPump; answers "is this mint risky?" by calling our API; listed as an x402 service | Trades, spends beyond cap |
 | **PWIRE Scout (buyer)** | Hermes / claw-agent, own wallet | Watches launches, pays per score, drafts alerts for Mises to approve | Posts without approval; spends > daily cap |
@@ -35,7 +35,7 @@
 
 ## Infra
 
-- **Contabo VPS** (`joseph` user): repo `~/pumpwire`, SQLite at `~/pumpwire/data/pumpwire.db`, services via `pm2`, Caddy TLS.
+- **a small VPS** (`joseph` user): repo `~/pumpwire`, SQLite at `~/pumpwire/data/pumpwire.db`, services via `pm2`, Caddy TLS.
 - **Hermes / claw-agent install** (on VPS):
   ```bash
   curl -fsSL https://raw.githubusercontent.com/Clawpump/claw-agent/main/scripts/install.sh | bash

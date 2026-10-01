@@ -7,7 +7,7 @@ import type { Server } from 'node:http';
 import { createApp, type Backend } from '../src/app.js';
 import { applySchema } from '../src/calls.js';
 import type { Config } from '../src/config.js';
-import { readBacktest } from '../src/stats.js';
+import { buildStats, readBacktest } from '../src/stats.js';
 
 const backend: Backend = {
   verify: async () => ({ isValid: false, invalidReason: 'unused' }) as never,
@@ -86,5 +86,42 @@ describe('/v1/stats.backtest', () => {
     utimesSync(p, t, t); // force a distinct mtime so the cache invalidates
     body = (await (await fetch(`${base}/v1/stats`)).json()) as { backtest: Record<string, unknown> | null };
     expect(body.backtest).toEqual({ model_version: 'v0.1.0', n: 120, precision_high_plus: 0.8, recall_high_plus: 0.5 });
+  });
+});
+
+describe('first-party labelling at query time', () => {
+  it('counts payTo and FIRST_PARTY_WALLETS as first-party even when the stored flag is 0', async () => {
+    const db = new DatabaseSync(':memory:');
+    applySchema(db);
+    const cfg = cfgWith('/nonexistent/backtest.json');
+    const SCOUT = 'ScoutScoutScoutScoutScoutScoutScoutScout1';
+    const OTHER = 'OtherOtherOtherOtherOtherOtherOtherOther1';
+    const ins = db.prepare(`INSERT INTO calls (ts, tool, arg, payer, network, asset, amount, payment_id, tx_sig, settle_via, status, first_party)
+      VALUES (?, 'rug_risk_score', ?, ?, ?, ?, 10000, ?, ?, 'facilitator', 'served', 0)`);
+    const MINT = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
+    ins.run(1, MINT, cfg.payTo, cfg.network, cfg.usdcMint, 'p1', 't1');
+    ins.run(2, MINT, SCOUT, cfg.network, cfg.usdcMint, 'p2', 't2');
+    ins.run(3, MINT, OTHER, cfg.network, cfg.usdcMint, 'p3', 't3');
+    const before = buildStats(db, cfg, 10);
+    expect(before.totals).toMatchObject({ paid_calls: 3, paid_calls_first_party: 1, paid_calls_third_party: 2, unique_integrators: 2 });
+    const after = buildStats(db, { ...cfg, firstPartyWallets: [SCOUT] }, 10);
+    expect(after.totals).toMatchObject({ paid_calls: 3, paid_calls_first_party: 2, paid_calls_third_party: 1, unique_integrators: 1 });
+    expect(after.last_calls.map((c) => c.first_party)).toEqual([false, true, true]);
+  });
+
+  it('a null payer is unattributed, not third-party', () => {
+    const db = new DatabaseSync(':memory:');
+    applySchema(db);
+    const cfg = cfgWith('/nonexistent/backtest.json');
+    const ins = db.prepare(`INSERT INTO calls (ts, tool, arg, payer, network, asset, amount, payment_id, tx_sig, settle_via, status, first_party)
+      VALUES (?, 'rug_risk_score', 'm', ?, ?, ?, 10000, ?, ?, 'facilitator', 'served', 0)`);
+    ins.run(1, null, cfg.network, cfg.usdcMint, 'p1', 't1');
+    ins.run(2, 'OtherOtherOtherOtherOtherOtherOtherOther1', cfg.network, cfg.usdcMint, 'p2', 't2');
+    ins.run(3, cfg.payTo, cfg.network, cfg.usdcMint, 'p3', 't3');
+    const s = buildStats(db, cfg, 10);
+    expect(s.totals).toMatchObject({
+      paid_calls: 3, paid_calls_first_party: 1, paid_calls_third_party: 1, paid_calls_unattributed: 1, unique_integrators: 1,
+    });
+    expect(s.last_calls.map((c) => c.party)).toEqual(['first-party', 'third-party', 'unattributed']);
   });
 });

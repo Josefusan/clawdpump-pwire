@@ -12,6 +12,7 @@ import {
   encodePaymentSignatureHeader,
 } from '@x402/core/http';
 import { registerExactSvmScheme } from '@x402/svm/exact/client';
+import { assertDevnetPolicy } from './devnet-policy.ts';
 
 async function loadSigner() {
   const v = process.env.DEVNET_PAYER_KEYPAIR;
@@ -34,6 +35,8 @@ async function main() {
   if (first.status !== 402) throw new Error(`expected 402, got ${first.status}`);
   const header = first.headers.get('payment-required');
   const required = header ? decodePaymentRequiredHeader(header) : await first.json();
+
+  assertDevnetPolicy(required); // throws before any key is loaded or anything is signed
 
   const client = registerExactSvmScheme(new x402Client(), { signer: await loadSigner() });
   const payload = await client.createPaymentPayload(required);

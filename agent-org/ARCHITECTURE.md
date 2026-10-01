@@ -23,7 +23,7 @@
 │   └─ local subagents (DeepSeek): researcher · ds-coder · drafter · scribe      │
 └───────────────┬───────────────────────────────────────────────────────────────┘
                 │ ssh pw  ·  bin/pw-dispatch / pw-collect / pw-merge / pw-status
-┌───────────────▼────────────── VPS · Contabo · user joseph ─────────────────────┐
+┌───────────────▼────────────── VPS · a small VPS · user joseph ─────────────────────┐
 │ ~/pumpwire-runs/run.sh  (tmux session per card)                                 │
 │   ├─ claude -p  architect (opus) · reviewer (opus/sonnet) · builder×2 (sonnet)  │
 │   │             ops (sonnet) · ds (Claude Code harness + DeepSeek, optional)    │
@@ -176,7 +176,7 @@ Guardrails: deterministic rules outrank Jev; money, keys, mainnet and public act
 2. `~/.ssh/config`:
    ```
    Host pw
-     HostName <contabo-ip>
+     HostName <vps-ip>
      User joseph
    ```
 3. The kit docs and skills are already in the repo root; T-001 moves them into `docs/kit/` and `.claude/skills/`. (`kit/` in the control dir is optional.)

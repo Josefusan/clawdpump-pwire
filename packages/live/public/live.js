@@ -47,6 +47,11 @@ export function solscanTx(sig, network) {
   return isTxSig(sig) ? `https://solscan.io/tx/${sig}${clusterQuery(network)}` : null;
 }
 
+/** pump.fun mints live on mainnet even while payments settle on devnet, so mint links never carry a cluster. */
+export function solscanMint(addr) {
+  return isPubkey(addr) ? `https://solscan.io/token/${addr}` : null;
+}
+
 /** https://solscan.io/account/<pubkey>?cluster=devnet — null when addr is not base58. */
 export function solscanAccount(addr, network) {
   return isPubkey(addr) ? `https://solscan.io/account/${addr}${clusterQuery(network)}` : null;
@@ -88,7 +93,8 @@ export function verdictClass(verdict) {
   return VERDICTS.includes(v) ? `v-${v.toLowerCase()}` : 'v-none';
 }
 
-const num = (v, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) : fallback);
+// null/undefined/'' are "unknown", never 0: Number(null) is 0, which would print a false 0%.
+const num = (v, fallback = 0) => (v === null || v === undefined || v === '' ? fallback : Number.isFinite(Number(v)) ? Number(v) : fallback);
 const int = (v) => Math.max(0, Math.trunc(num(v, 0)));
 const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : null);
 const rows = (v) => (Array.isArray(v) ? v : []);
@@ -110,6 +116,7 @@ export function buildViewModel(stats, now) {
   const paid = int(t.paid_calls);
   const firstParty = int(t.paid_calls_first_party);
   const thirdParty = int(t.paid_calls_third_party);
+  const unattributed = int(t.paid_calls_unattributed);
   const backtest = obj(s.backtest);
   const n = int(backtest?.n);
 
@@ -123,14 +130,16 @@ export function buildViewModel(stats, now) {
       { label: 'USDC paid', value: fmtAmount(t.usdc_paid ?? '0', 'USDC') },
       { label: '$ANSEM paid', value: fmtAmount(t.ansem_paid ?? '0', 'ANSEM') },
       { label: 'unique payers', value: String(int(t.unique_payers)) },
-      { label: 'integrators', value: String(int(t.unique_integrators)) },
+      { label: 'third-party wallets', value: String(int(t.unique_integrators)) },
     ],
     split: {
       firstParty,
       thirdParty,
+      unattributed,
       firstPartyPct: paid > 0 ? firstParty / paid : 0,
       text:
-        `${firstParty} first-party (our Scout) · ${thirdParty} third-party (external integrators)` +
+        `${firstParty} first-party (our Scout) · ${thirdParty} third-party (distinct external wallets, not verified builders)` +
+        (unattributed > 0 ? ` · ${unattributed} unattributed (payer not reported)` : '') +
         (paid > 0 ? ` · ${fmtPct(firstParty / paid)} first-party` : ''),
     },
     calls: rows(s.last_calls)
@@ -146,14 +155,14 @@ export function buildViewModel(stats, now) {
           name: meta.name || null,
           description: meta.description || null,
           mint: shortAddr(c.arg),
-          mintHref: solscanAccount(c.arg, network),
+          mintHref: solscanMint(c.arg),
           score: c.score === null || c.score === undefined ? '—' : String(int(c.score)),
           verdict: verdict || '—',
           verdictClass: verdictClass(verdict),
           tx: shortAddr(c.tx_sig),
           txHref: solscanTx(c.tx_sig, network),
           payer: shortAddr(c.payer),
-          party: c.first_party ? 'first-party' : 'third-party',
+          party: c.party === 'unattributed' ? 'unattributed' : typeof c.first_party === 'boolean' ? (c.first_party ? 'first-party' : 'third-party') : 'unlabelled',
           latency: c.latency_ms === null || c.latency_ms === undefined ? '—' : `${int(c.latency_ms)} ms`,
         };
       }),
@@ -165,7 +174,7 @@ export function buildViewModel(stats, now) {
         const verdict = safeText(c.verdict, 8).toUpperCase();
         return {
           mint: shortAddr(c.mint),
-          mintHref: solscanAccount(c.mint, network),
+          mintHref: solscanMint(c.mint),
           symbol: meta.symbol || null,
           name: meta.name || null,
           description: meta.description || null,
@@ -182,7 +191,8 @@ export function buildViewModel(stats, now) {
           n: String(n),
           precision: fmtPct(num(backtest.precision_high_plus, NaN)),
           recall: fmtPct(num(backtest.recall_high_plus, NaN)),
-          small: n > 0 && n < 100,
+          small: n < 100,
+          caveat: safeText(backtest.caveat, 160) || null,
         }
       : null,
   };
@@ -190,9 +200,11 @@ export function buildViewModel(stats, now) {
 
 export function backtestText(backtest) {
   if (!backtest) return 'Backtest not run yet — precision/recall will appear here once v0 labels land.';
+  const caveat = backtest.caveat ? ` — ${backtest.caveat}` : '';
+  if (backtest.n === '0') return `${backtest.model}: harness ran, no labelled launches yet (n = 0)${caveat}`;
   return (
     `${backtest.model}: precision at HIGH+ ${backtest.precision}, recall ${backtest.recall}, n = ${backtest.n}` +
-    (backtest.small ? ' (small sample — indicative only)' : '')
+    (backtest.small ? ' (small sample — indicative only)' : '') + caveat
   );
 }
 

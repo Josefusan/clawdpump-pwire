@@ -6,6 +6,13 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "start": "node --experimental-sqlite dist/main.js",
+    "test": "NODE_OPTIONS=--experimental-sqlite vitest run --root ../.. packages/scout"
+  },
+  "dependencies": {
+    "@pumpwire/mcp": "*",
+    "@solana/kit": "^5.5.1",
+    "@x402/svm": "^2.28.0"
   }
 }

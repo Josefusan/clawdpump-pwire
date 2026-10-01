@@ -7,6 +7,7 @@ export default defineConfig({
     alias: {
       '@pumpwire/score': fileURLToPath(new URL('./packages/score/src/index.ts', import.meta.url)),
       '@pumpwire/live': fileURLToPath(new URL('./packages/live/src/index.ts', import.meta.url)),
+      '@pumpwire/mcp': fileURLToPath(new URL('./packages/mcp/src/index.ts', import.meta.url)),
     },
   },
   test: {

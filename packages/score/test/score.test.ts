@@ -103,7 +103,7 @@ describe('score() v0.1.0 — docs/INTERFACES.md §5.4', () => {
     expectScore(snap, 10, 'LOW', [['deployer_history', 10, 1]]);
   });
 
-  it('S06 serial rugger + bundle + top10 42% → 60 HIGH', () => {
+  it('S06 serial dead-launch deployer + bundle + top10 42% → 60 HIGH', () => {
     const snap = cleanLaunch();
     addPriors(snap, ['DEAD_1H', 'DEV_DUMP', 'DEAD_1H']);
     shareFunder(snap, range(0, 5), BUNDLER, T0 - 30 * DAY);
