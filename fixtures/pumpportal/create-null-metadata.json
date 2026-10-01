@@ -1,0 +1,21 @@
+{
+  "mint": "bS16haPrRxyNVNVUjc9478b8FAsxutjtmt9cftDQpump",
+  "name": null,
+  "symbol": null,
+  "description": null,
+  "image": null,
+  "showName": false,
+  "marketCapSol": 28.14,
+  "initialBuy": 0,
+  "bondingCurveKey": "LoSq8Me1CTkMgyYhWfr7gjLdeX6HnBkBAuAuEmUPpump",
+  "vSolInBondingCurve": 30,
+  "vTokensInBondingCurve": 1073000000,
+  "uri": null,
+  "twitter": null,
+  "telegram": null,
+  "website": null,
+  "traderPublicKey": "oSHtyxon9EVtmeBYy8DSMpBkyE5rMtf8hWFE9SRn3vPA",
+  "txType": "create",
+  "signature": "2w6uxdcZQqSKxjEwQDgbJBCykBkPNZUVU5WPt3rfEsUP2hCDiT8MnTvXpwr1amGTNZiupTGXQySXeDc1rR4BYb6u",
+  "pool": "pump"
+}

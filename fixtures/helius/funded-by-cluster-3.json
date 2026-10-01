@@ -1,0 +1,15 @@
+{
+  "funder": "TAKc7chWm2R4PQVCj8HayiyameXWMnfaPC7iK4BSBSMx",
+  "mint": "So11111111111111111111111111111111111111112",
+  "symbol": "SOL",
+  "amount": 0.05,
+  "amountRaw": "50000000",
+  "decimals": 9,
+  "signature": "87zhiZUdgKQqSKJDJ3roEFC5i54mefpdGX2XUmLm2be7Cwx7kTpqpyv3J965nXWf2wNHaMi1A3r9nZNXNu8wnZxq",
+  "timestamp": 1790000060,
+  "date": "2026-09-21T14:14:20.000Z",
+  "slot": 301000107,
+  "explorerUrl": "https://orbmarkets.io/tx/87zhiZUdgKQqSKJDJ3roEFC5i54mefpdGX2XUmLm2be7Cwx7kTpqpyv3J965nXWf2wNHaMi1A3r9nZNXNu8wnZxq",
+  "funderName": null,
+  "funderType": "wallet"
+}

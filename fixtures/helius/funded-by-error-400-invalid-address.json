@@ -1,0 +1,5 @@
+{
+  "error": "Invalid wallet address",
+  "code": 400,
+  "details": "'invalid-address' is not a valid Solana address"
+}

@@ -1,0 +1,13 @@
+{
+  "mint": "SV6Rn1CscBSfrhUyzfrZGHGXrm25pMGFnjpu6j4Rpump",
+  "name": "Graduated Frog",
+  "symbol": "GRAD",
+  "uri": "https://ipfs.io/ipfs/QmzqU5twaozjn3nZ8dSTvsesgjkXnFY5CsQfiFGo6RUmnR",
+  "traderPublicKey": "BxoE7vMkTpsGy2wtZWXiDn1LftZQykHtjQBkhk1i94ZG",
+  "txType": "migrate",
+  "pool": "pump-amm",
+  "marketCapSol": 452.87,
+  "vSolInBondingCurve": 85,
+  "vTokensInBondingCurve": 206900000,
+  "signature": "c3GXNwe7tbaMx7njzqcbg3eo4fQdxMzVgTJbYV6wamrhEh8PaHxBN1i349tREPQTQ5GH65zKaRWjajQXEoYX2P4h"
+}

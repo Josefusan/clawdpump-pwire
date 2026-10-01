@@ -1,0 +1,21 @@
+{
+  "mint": "kFkopVtfn5UKvKkuLFa7xhY9emaonbkBSB81rB87pump",
+  "name": "🐸 青蛙 روكيت ＦＵＬＬ－ＷＩＤＴＨ 💩",
+  "symbol": "🐸🚀",
+  "description": "Z̸̢̛a̷̧͝l̶̡͝ģ̸̛o̴̢͜ combining marks + RTL override ‮ and zero-width ​ joiners.",
+  "image": "https://ipfs.io/ipfs/QmtRxs2uSMAbtMCZ8hWdcZ2TEfnMnMzfeZY1NDnXYDG5Aj",
+  "showName": true,
+  "marketCapSol": 28.14,
+  "initialBuy": 0,
+  "bondingCurveKey": "JozytTvoNmQHvFkXSTvZxFedA38Pcq8jLfiRLhampump",
+  "vSolInBondingCurve": 30,
+  "vTokensInBondingCurve": 1073000000,
+  "uri": "https://ipfs.io/ipfs/QmtRxs2uSMAbtMCZ8hWdcZ2TEfnMnMzfeZY1NDnXYDG5Aj?name=%E9%9D%92%E8%9B%99",
+  "twitter": "",
+  "telegram": "",
+  "website": "",
+  "traderPublicKey": "oSHtyxon9EVtmeBYy8DSMpBkyE5rMtf8hWFE9SRn3vPA",
+  "txType": "create",
+  "signature": "wnbSuzjnuS1iREDC3EjLVaVW3Co65kZJHLw4HcRiycPxbcwzwifkZkKWw6jcmt5SqrmS3kDvVpwQXcd236XLwGZa",
+  "pool": "pump"
+}

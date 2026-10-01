@@ -1,0 +1,10 @@
+{
+  "name": "No Mint Here",
+  "symbol": "NOMINT",
+  "description": "Create frame without the mint field.",
+  "uri": "https://ipfs.io/ipfs/QmxFryNyky2yx1CFzyAs8mLokf2wJMQ38ReKGPNKYTEjcd",
+  "traderPublicKey": "oSHtyxon9EVtmeBYy8DSMpBkyE5rMtf8hWFE9SRn3vPA",
+  "txType": "create",
+  "signature": "HWDx9NocjYwQBkjU9UFJb6VYKG527JsAfpTJZe1LjrKejUPAo2o8MA5EHEm414o6PJBJ7Nu8Fxd6oasnVvsxZkur",
+  "pool": "pump"
+}

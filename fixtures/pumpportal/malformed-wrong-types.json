@@ -1,0 +1,14 @@
+{
+  "mint": 12345,
+  "traderPublicKey": [
+    "not",
+    "a",
+    "string"
+  ],
+  "txType": 7,
+  "solAmount": "zero",
+  "tokenAmount": null,
+  "newTokenBalance": {},
+  "signature": 42,
+  "pool": true
+}

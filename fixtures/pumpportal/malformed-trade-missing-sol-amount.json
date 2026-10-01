@@ -1,0 +1,9 @@
+{
+  "mint": "BEsvbEmtygKgqiqCXrftotf47vXJXvRxovmWqkjYpump",
+  "traderPublicKey": "Qb8RG3WZnBisc1c1nD4oYdrZ6da3eRCyiuehvHtBahYZ",
+  "txType": "buy",
+  "tokenAmount": 1234.5,
+  "newTokenBalance": 1234.5,
+  "signature": "2HcV6Tx7pbkBvfvu2MefG9kB67STL7U3is2skPUFameXr3rhCqvBvMp1NFGF4beHCXzutH2DUjpTkD2fQhJ7SsJZ",
+  "pool": "pump"
+}

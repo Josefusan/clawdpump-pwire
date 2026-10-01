@@ -1,0 +1,15 @@
+{
+  "funder": "w6j2fQyg3nRQKnsAH2MtMvR2fibQm4ZJFgHYMxsGMNVk",
+  "mint": "So11111111111111111111111111111111111111112",
+  "symbol": "SOL",
+  "amount": 2.5,
+  "amountRaw": "2500000000",
+  "decimals": 9,
+  "signature": "rsWFrTz1z9rM87i5WwesvPEProQVzBYKSHUTxH4HzBrsNucmk38PJjGPQ7Wy6Z6dzqz3iFJu6XcTisvBcwiVif6w",
+  "timestamp": 1789990000,
+  "date": "2026-09-21T11:26:40.000Z",
+  "slot": 300950123,
+  "explorerUrl": "https://orbmarkets.io/tx/rsWFrTz1z9rM87i5WwesvPEProQVzBYKSHUTxH4HzBrsNucmk38PJjGPQ7Wy6Z6dzqz3iFJu6XcTisvBcwiVif6w",
+  "funderName": "Coinbase 2",
+  "funderType": "exchange"
+}

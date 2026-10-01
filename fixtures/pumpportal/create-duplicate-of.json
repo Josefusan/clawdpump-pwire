@@ -1,0 +1,21 @@
+{
+  "mint": "BEsvbEmtygKgqiqCXrftotf47vXJXvRxovmWqkjYpump",
+  "name": "Test Token",
+  "symbol": "TEST",
+  "description": "A fixture token.",
+  "image": "https://ipfs.io/ipfs/QmZUoUdpj4hJDzbCHYXU5EurbGZLM6FgDUs25NsvhnDQDx",
+  "showName": true,
+  "marketCapSol": 28.14,
+  "initialBuy": 0,
+  "bondingCurveKey": "qJ1GjzFe7gwEPpoaVJqvwJBrPWXYP2DWVLo8snP2pump",
+  "vSolInBondingCurve": 30,
+  "vTokensInBondingCurve": 1073000000,
+  "uri": "https://ipfs.io/ipfs/QmZUoUdpj4hJDzbCHYXU5EurbGZLM6FgDUs25NsvhnDQDx",
+  "twitter": "",
+  "telegram": "",
+  "website": "",
+  "traderPublicKey": "oSHtyxon9EVtmeBYy8DSMpBkyE5rMtf8hWFE9SRn3vPA",
+  "txType": "create",
+  "signature": "JyYKzPAPUfiZWMrMtMzmiDQXLVasxfG54qQspB4mahLor5ewEBL3JPePSRGBajpFtZpVrTnwefcKJwAKQoA7LHAy",
+  "pool": "pump"
+}

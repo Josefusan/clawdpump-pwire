@@ -1,0 +1,15 @@
+{
+  "funder": "sG5xPvZA56MLoz78mEdNwYuzZvB85E9LfksvHEjWR2Dn",
+  "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  "symbol": "USDC",
+  "amount": 25,
+  "amountRaw": "25000000",
+  "decimals": 6,
+  "signature": "eo4BUMEqrKzfnRxMShAwC12yY58h4hadkMzyeFNyNfCdJPxT8wn3JMW38PC7eXxqvDxmnmC3tHgbS3pKWugbp7zB",
+  "timestamp": 1789980000,
+  "date": "2026-09-21T08:40:00.000Z",
+  "slot": 300900456,
+  "explorerUrl": "https://orbmarkets.io/tx/eo4BUMEqrKzfnRxMShAwC12yY58h4hadkMzyeFNyNfCdJPxT8wn3JMW38PC7eXxqvDxmnmC3tHgbS3pKWugbp7zB",
+  "funderName": null,
+  "funderType": "wallet"
+}
