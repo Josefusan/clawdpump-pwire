@@ -48,6 +48,11 @@ echo "env names present: ${REQUIRED[*]}"
 
 [ "$(pub X402_NETWORK)" = "$MAINNET_NETWORK" ] || die "X402_NETWORK is not mainnet $MAINNET_NETWORK"
 [ "$(pub USDC_MINT)" = "$MAINNET_USDC" ] || die "USDC_MINT is not mainnet USDC $MAINNET_USDC"
+PORT=$(pub PORT)
+case "$PORT" in
+  ''|*[!0-9]*) die "PORT in mainnet.env must be numeric" ;;
+  3000) die "PORT=3000 is the devnet API port; mainnet needs a distinct PORT" ;;
+esac
 FAC=$(pub X402_FACILITATOR_URL)
 FAC=${FAC%/}
 [ "$FAC" != "https://x402.org/facilitator" ] || die "facilitator is the devnet-only x402.org"
@@ -72,9 +77,13 @@ case "$sup" in
   *) die "facilitator /supported lacks $MAINNET_NETWORK" ;;
 esac
 
-if [ -t 0 ] && [ -z "${CUTOVER_YES:-}" ]; then
-  read -r -p "payTo/price/facilitator above correct? type 'yes' to deploy: " ans
-  [ "$ans" = yes ] || die "aborted by operator"
+if [ -t 0 ]; then
+  if [ "${CUTOVER_YES:-}" != 1 ]; then
+    read -r -p "payTo/price/facilitator above correct? type 'yes' to deploy: " ans
+    [ "$ans" = yes ] || die "aborted by operator"
+  fi
+else
+  [ "${CUTOVER_YES:-}" = 1 ] || die "refusing non-interactive mainnet deploy: stdin is not a terminal; set CUTOVER_YES=1 to confirm explicitly"
 fi
 
 echo "== deploy =="
@@ -83,7 +92,6 @@ pm2 startOrReload "$ECO" --update-env
 pm2 status
 
 echo "== smoke =="
-PORT=$(pub PORT)
 DB=$(pub PUMPWIRE_DB_PATH)
 BASE="http://127.0.0.1:$PORT"
 ok=0
@@ -98,7 +106,11 @@ done
 [ $ok -eq 1 ] || die "/health failed (pm2 logs pumpwire-api --lines 100 --nostream); consider --rollback"
 MINT=$(sqlite3 -readonly "$DB" "select mint from tokens order by created_slot desc limit 1;" 2>/dev/null || true)
 [ -n "$MINT" ] || die "no token in $DB to probe /v1/risk (is ingest running?)"
-code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/v1/risk/$MINT")
+body=$(mktemp)
+trap 'rm -f "$body"' EXIT
+code=$(curl -s -o "$body" -w '%{http_code}' "$BASE/v1/risk/$MINT")
 [ "$code" = 402 ] || die "unpaid GET /v1/risk/$MINT returned $code, expected 402; run --rollback"
-echo "unpaid /v1/risk/$MINT -> 402 OK"
+# Guard against a devnet API answering on this port: the 402 must advertise the mainnet network.
+grep -q "$MAINNET_NETWORK" "$body" || die "402 body does not advertise network $MAINNET_NETWORK (wrong process on port $PORT?); run --rollback"
+echo "unpaid /v1/risk/$MINT -> 402 with network $MAINNET_NETWORK OK"
 echo "LIVE. Next: 3 real paid calls, verify each tx on Solscan (docs/RUNBOOK.md). Persist: pm2 save"

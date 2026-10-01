@@ -18,7 +18,8 @@ pm2 apps: `pumpwire-ingest`, `pumpwire-api-devnet`.
 Checkout `~/pumpwire` (`main`); secrets `~/.config/pumpwire/mainnet.env` (chmod 600). pm2 apps: `pumpwire-ingest`, `pumpwire-api`.
 Facilitator (verified 2026-10-01): `https://facilitator.payai.network`; network `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`.
 Required env NAMES: `PAYTO_ADDRESS PUMPWIRE_DB_PATH X402_NETWORK X402_FACILITATOR_URL USDC_MINT SOLANA_RPC_URL HELIUS_API_KEY PUMPPORTAL_WS_URL PORT FIRST_PARTY_WALLETS`.
-`PAYTO_ADDRESS`'s USDC ATA must already exist. The script is idempotent; re-run after any fix.
+`PAYTO_ADDRESS`'s USDC ATA must already exist; `PORT` must not be `3000` (devnet API). Idempotent; re-run after any fix.
+Non-interactive runs (pipe/CI) are refused unless `CUTOVER_YES=1`; smoke requires the 402 to name the mainnet network.
 
 **Go live**
 1. `cd ~/pumpwire && git merge --ff-only origin/main` (or merge `dev` → `main`); tree must be clean.
