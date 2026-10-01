@@ -12,7 +12,8 @@ import { createServer } from './server.js';
 export { loadConfig } from './config.js';
 export { SpendStore } from './spend.js';
 export { createServer, RUG_RISK_TOOL } from './server.js';
-export { fetchRiskResult, enforcePolicy, ToolError } from './client.js';
+export { fetchRiskResult, enforcePolicy, ToolError, type PayDeps } from './client.js';
+export { rpcBalanceReader } from './balance.js';
 
 async function main(): Promise<void> {
   const cfg = loadConfig();

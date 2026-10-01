@@ -23,5 +23,8 @@ module.exports = {
   apps: [
     Object.assign({}, base, { name: 'pumpwire-ingest', script: 'dist/main.js', cwd: path.join(ROOT, 'packages/ingest') }),
     Object.assign({}, base, { name: 'pumpwire-api-devnet', cwd: path.join(ROOT, 'packages/api') }),
+    // T-016 Scout: first-party buyer. Pays the local api from the devnet payer (DEVNET_PAYER_KEYPAIR path in devnet.env),
+    // caps ≤ $0.05/call and ≤ $5/day enforced before signing; drafts alerts to ~/pumpwire-data/alerts, never posts.
+    Object.assign({}, base, { name: 'pumpwire-scout-devnet', script: 'dist/main.js', cwd: path.join(ROOT, 'packages/scout') }),
   ],
 };
