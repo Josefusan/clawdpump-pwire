@@ -166,9 +166,9 @@ Any MCP-capable agent can buy PumpWire intel with its **own** wallet — no sign
       "command": "node",
       "args": ["/ABSOLUTE/PATH/TO/clawdpump-pwire/packages/mcp/dist/index.js"],
       "env": {
-        "PUMPWIRE_API_URL": "https://<pumpwire-api-host>",
+        "PUMPWIRE_API_URL": "https://formation-parental-nuclear-fair.trycloudflare.com",
         "SOLANA_KEYPAIR_PATH": "/ABSOLUTE/PATH/TO/agent-wallet.json",
-        "PUMPWIRE_NETWORK": "devnet",
+        "PUMPWIRE_NETWORK": "mainnet",
         "PUMPWIRE_MAX_PRICE_USD": "0.05",
         "PUMPWIRE_DAILY_CAP_USD": "1"
       }
