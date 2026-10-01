@@ -30,7 +30,7 @@ Every call is risk information, not advice.
 
 ## 3. Proof a judge can open
 
-All figures in the table below are devnet. Commands were run read-only against the team server on 2026-10-01.
+Figures in the table below are devnet unless the row says mainnet. Commands were run read-only against the team server on 2026-10-01.
 
 | Item | Value | Source and UTC time |
 |---|---|---|
