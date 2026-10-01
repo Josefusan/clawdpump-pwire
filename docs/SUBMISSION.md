@@ -77,7 +77,7 @@ Nothing is paid without `--pay` or an explicit tool call, and never above the ca
 1. **Ingest:** Solana `logsSubscribe` on the pump.fun program; creates, trades, migrations decoded from program logs; wallet age and funding sources enriched via Helius.
 2. **Store:** SQLite in WAL mode: `tokens`, `trades`, `wallets`, `deployers`, `funding_edges`, `calls`.
 3. **Score:** pure `score(snapshot)` with 8 weighted factors (deployer history 25, bundled launch 20, holder concentration 15, dev position 10, fresh wallets 10, funding cluster 10, curve velocity 5, metadata flags 5). Verdicts: 0-24 LOW, 25-49 MED, 50-74 HIGH, 75-100 EXTREME.
-4. **API:** Express + `@x402/express`. `GET /v1/risk/:mint` answers 402 with the offer, then 200 after settlement. Free: `/health`, `/v1/stats`, `/live`.
+4. **API:** Express + the `@x402/core` facilitator client (`HTTPFacilitatorClient`). `GET /v1/risk/:mint` answers 402 with the offer, then 200 after settlement. Free: `/health`, `/v1/stats`, `/live`.
 5. **Clients:** `@pumpwire/mcp` (stdio MCP server, pays with the caller's wallet), PWIRE Scout (our own buyer), raw HTTP from any language.
 6. **Proof:** every served call is logged with its settlement signature and labelled first-party or third-party; `/live` renders that log.
 
@@ -103,7 +103,7 @@ Nothing is paid without `--pay` or an explicit tool call, and never above the ca
 - **No trading of $PWIRE by us or our agents.** No coordinated buys, no bots on our own token.
 - **Humans approve money and posts.** Agents sign only within hard caps; Scout drafts alerts and never
   posts; a human reviews every post.
-- **No investment language.** $PWIRE is an access tier, not a promise. Nothing here is a forecast.
+- **No investment language.** $PWIRE is intended as an access tier (planned, not live) — not a promise. Nothing here is a forecast.
 - **Public data only; wallets, never people.** Reasons cite wallet addresses in short form (`7xQ…9f`)
   and public signatures. No doxxing, no accusations against any person.
 - **Risk information, not advice.** A score describes signals in public onchain data about wallets and
