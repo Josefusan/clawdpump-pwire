@@ -16,8 +16,13 @@ import { registerExactSvmScheme } from '@x402/svm/exact/client';
 async function loadSigner() {
   const v = process.env.DEVNET_PAYER_KEYPAIR;
   if (!v) throw new Error('DEVNET_PAYER_KEYPAIR is not set');
-  const json = v.trim().startsWith('[') ? v : readFileSync(v, 'utf8');
-  return createKeyPairSignerFromBytes(Uint8Array.from(JSON.parse(json) as number[]));
+  try {
+    const json = v.trim().startsWith('[') ? v : readFileSync(v, 'utf8'); // ENOENT text would echo the value
+    return await createKeyPairSignerFromBytes(Uint8Array.from(JSON.parse(json) as number[]));
+  } catch {
+    // Never echo the input: JSON.parse errors can contain the key bytes.
+    throw new Error('invalid DEVNET_PAYER_KEYPAIR: expected a keypair path or a JSON secret-key array');
+  }
 }
 
 async function main() {

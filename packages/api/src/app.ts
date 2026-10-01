@@ -9,8 +9,8 @@ import {
 } from '@x402/core/http';
 import type { FacilitatorClient } from '@x402/core/server';
 import type { PaymentPayload, PaymentRequired, PaymentRequirements } from '@x402/core/types';
-import { isBase58Pubkey } from './base58.js';
-import { claimPayment, markFailed, markServed, setTxSig } from './calls.js';
+import { base58Decode, isBase58Pubkey } from './base58.js';
+import { claimPayment, findOwnRow, markFailed, markServed, setTxSig } from './calls.js';
 import { PRICE_BASE_UNITS, type Config } from './config.js';
 import { stubScore, tokenExists, type ScoreFn } from './risk.js';
 import { buildStats } from './stats.js';
@@ -29,6 +29,11 @@ export interface Deps {
   cfg: Config;
   score?: ScoreFn;
   nowS?: () => number;
+}
+
+/** A transaction signature: base58 that decodes to exactly 64 bytes. */
+export function isTxSig(s: unknown): s is string {
+  return typeof s === 'string' && /^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(s) && base58Decode(s)?.length === 64;
 }
 
 export const memoFor = (mint: string): string => `pumpwire:${TOOL}:${mint}`;
@@ -169,19 +174,27 @@ export function createApp(deps: Deps) {
     }
     if (!bound) return invalid('transaction memo does not match this request');
 
+    // §7: a payment already served (or settled) for this same resource is never re-verified; the tx may
+    // have landed or its blockhash expired, which would make verify fail for a legitimately paid call.
+    const paymentId = createHash('sha256').update(wire).digest('hex');
+    const own = findOwnRow(db, paymentId, TOOL, mint);
     let payer: string | null;
-    try {
-      const v = await backend.verify(payload, want);
-      if (v.isValid !== true) return invalid(v.invalidReason ?? 'verification failed');
-      payer = typeof v.payer === 'string' ? v.payer : null;
-    } catch {
-      return fail(res, 502, 'UPSTREAM', 'payment verification unavailable');
+    if (own && (own.status === 'served' || own.tx_sig !== null)) {
+      payer = own.payer;
+    } else {
+      try {
+        const v = await backend.verify(payload, want);
+        if (v.isValid !== true) return invalid(v.invalidReason ?? 'verification failed');
+        payer = typeof v.payer === 'string' ? v.payer : null;
+      } catch {
+        return fail(res, 502, 'UPSTREAM', 'payment verification unavailable');
+      }
     }
 
     // Atomic claim keyed by sha256(tx bytes). Only one concurrent caller proceeds.
     const outcome = claimPayment(db, {
       ts: nowS(), tool: TOOL, arg: mint, payer, network: cfg.network, asset: cfg.usdcMint,
-      amount: PRICE_BASE_UNITS, paymentId: createHash('sha256').update(wire).digest('hex'),
+      amount: PRICE_BASE_UNITS, paymentId,
       firstParty: payer !== null && cfg.firstPartyWallets.includes(payer),
     });
     if (outcome.kind === 'replayed') return fail(res, 402, 'PAYMENT_REPLAYED', 'payment already used');
@@ -204,7 +217,7 @@ export function createApp(deps: Deps) {
     if (outcome.kind === 'claimed' || !outcome.settled) {
       try {
         const s = await backend.settle(payload, want);
-        if (s.success !== true || s.network !== cfg.network || !s.transaction || !setTxSig(db, id, s.transaction)) {
+        if (s.success !== true || s.network !== cfg.network || !isTxSig(s.transaction) || !setTxSig(db, id, s.transaction)) {
           markFailed(db, id);
           return invalid(s.errorReason ?? 'settlement failed');
         }

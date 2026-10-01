@@ -28,6 +28,7 @@ export interface CallRow {
   id: number;
   tool: string;
   arg: string;
+  payer: string | null;
   status: 'pending' | 'served' | 'failed';
   tx_sig: string | null;
   result_json: string | null;
@@ -39,7 +40,7 @@ export type ClaimOutcome =
   | { kind: 'served'; row: CallRow }                     // same resource already served: idempotent re-serve
   | { kind: 'replayed' };                                // spent for something else, or in flight elsewhere
 
-const SELECT_ROW = 'SELECT id, tool, arg, status, tx_sig, result_json FROM calls WHERE payment_id = ?';
+const SELECT_ROW = 'SELECT id, tool, arg, payer, status, tx_sig, result_json FROM calls WHERE payment_id = ?';
 
 /**
  * Atomically claim a payment. Exactly one concurrent caller gets `claimed`/`retry`: the INSERT is
@@ -69,6 +70,12 @@ export function claimPayment(db: DatabaseSync, c: ClaimInput): ClaimOutcome {
     .run(c.ts, c.paymentId, c.tool, c.arg, c.ts - STALE_PENDING_S);
   if (Number(up.changes) === 1) return { kind: 'retry', id: row.id, settled: row.tx_sig !== null };
   return { kind: 'replayed' };
+}
+
+/** Existing row for this payment if it was claimed for the same tool+arg (else undefined). */
+export function findOwnRow(db: DatabaseSync, paymentId: string, tool: string, arg: string): CallRow | undefined {
+  const row = db.prepare(SELECT_ROW).get(paymentId) as CallRow | undefined;
+  return row && row.tool === tool && row.arg === arg ? row : undefined;
 }
 
 export function markFailed(db: DatabaseSync, id: number): void {

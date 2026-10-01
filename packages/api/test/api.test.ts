@@ -58,7 +58,8 @@ let base: string;
 let mint: string;
 let backend: { verify: ReturnType<typeof vi.fn>; settle: ReturnType<typeof vi.fn>; getSupported: ReturnType<typeof vi.fn> };
 let scoreFn: ReturnType<typeof vi.fn>;
-let sigN = 0;
+let lastSig = '';
+const newSig = () => (lastSig = base58Encode(randomBytes(64)));
 
 const callRows = () => db.prepare('SELECT * FROM calls').all() as Record<string, unknown>[];
 const get = (path: string, header?: string) =>
@@ -71,7 +72,7 @@ beforeEach(async () => {
   db.prepare('INSERT INTO tokens (mint, deployer, created_slot, created_at) VALUES (?, ?, ?, ?)').run(mint, rndKey(), 300, 1_790_000_000);
   backend = {
     verify: vi.fn(async () => ({ isValid: true, payer: PAYER })),
-    settle: vi.fn(async () => ({ success: true, transaction: `sig${++sigN}`, network: NETWORK as PaymentRequirements['network'] })),
+    settle: vi.fn(async () => ({ success: true, transaction: newSig(), network: NETWORK as PaymentRequirements['network'] })),
     getSupported: vi.fn(async () => ({
       kinds: [{ x402Version: 2, scheme: 'exact', network: NETWORK as PaymentRequirements['network'], extra: { feePayer: FEE_PAYER } }],
       extensions: [], signers: {},
@@ -133,7 +134,7 @@ describe('paid path', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
       tool: 'rug_risk_score', arg: mint, payer: PAYER, asset: USDC, amount: 10000, status: 'served',
-      first_party: 0, tx_sig: 'sig' + sigN,
+      first_party: 0, tx_sig: lastSig,
     });
     expect(typeof rows[0]!.latency_ms).toBe('number');
     expect(backend.settle).toHaveBeenCalledTimes(1);
@@ -204,12 +205,45 @@ describe('replay protection', () => {
     expect(scoreFn).toHaveBeenCalledTimes(1);
   });
 
+  it('re-serve does not re-verify: verify invalid on the second call still returns 200 (§7)', async () => {
+    const h = payHeader(buildTx([memoFor(mint)]));
+    const a = await get(`/v1/risk/${mint}`, h);
+    expect(a.status).toBe(200);
+    backend.verify.mockResolvedValue({ isValid: false, invalidReason: 'blockhash_expired' });
+    const b = await get(`/v1/risk/${mint}`, h);
+    expect(b.status).toBe(200);
+    expect(await b.json()).toEqual(await a.json());
+    expect(backend.verify).toHaveBeenCalledTimes(1);
+  });
+
+  it('settled-but-unserved row is served on retry without verify or re-settle', async () => {
+    const h = payHeader(buildTx([memoFor(mint)]));
+    scoreFn.mockImplementationOnce(() => { throw new Error('boom'); });
+    // simulate: settled earlier (tx_sig set) but the row is failed
+    await get(`/v1/risk/${mint}`, h);
+    db.prepare("UPDATE calls SET tx_sig = 'settledSig' WHERE status = 'failed'").run();
+    backend.verify.mockResolvedValue({ isValid: false, invalidReason: 'blockhash_expired' });
+    const b = await get(`/v1/risk/${mint}`, h);
+    expect(b.status).toBe(200);
+    expect(backend.verify).toHaveBeenCalledTimes(1);
+    expect(backend.settle).not.toHaveBeenCalled();
+    expect(callRows()[0]).toMatchObject({ status: 'served', tx_sig: 'settledSig' });
+  });
+
+  it('settle returning a non-signature transaction → PAYMENT_INVALID, row failed, no tx_sig', async () => {
+    backend.settle.mockResolvedValueOnce({ success: true, transaction: 'not-a-sig', network: NETWORK });
+    const res = await get(`/v1/risk/${mint}`, payHeader(buildTx([memoFor(mint)])));
+    expect(res.status).toBe(402);
+    expect((await res.json()).error).toBe('PAYMENT_INVALID');
+    expect(callRows()[0]).toMatchObject({ status: 'failed', tx_sig: null });
+  });
+
   it('concurrent identical payments: exactly one wins, the other is PAYMENT_REPLAYED', async () => {
     let release!: () => void;
     const gate = new Promise<void>((r) => { release = r; });
     backend.settle.mockImplementationOnce(async () => {
       await gate;
-      return { success: true, transaction: 'sigC', network: NETWORK };
+      return { success: true, transaction: newSig(), network: NETWORK };
     });
     const h = payHeader(buildTx([memoFor(mint)]));
     const first = get(`/v1/risk/${mint}`, h);
