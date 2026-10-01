@@ -1,6 +1,6 @@
 ---
 name: pumpwire-x402-api
-description: PumpWire's paid HTTP API over x402 on Solana (USDC, $ANSEM, $PWIRE holder tier), free endpoints and the calls log. Use for packages/api, pricing and payment verification.
+description: PumpWire's paid HTTP API over x402 on Solana (USDC live; $ANSEM and $PWIRE holder tier planned, not enabled), free endpoints and the calls log. Use for packages/api, pricing and payment verification.
 ---
 
 # PumpWire x402 API
@@ -30,14 +30,14 @@ app.use(paymentMiddleware({
 ```
 
 ## Pricing variants
-- **$ANSEM:** a second `accepts` entry priced at 90% of USD value in $ANSEM (spot from Jupiter quote, refreshed every 60s).
+- **$ANSEM (planned, not enabled):** a second `accepts` entry priced at 90% of USD value in $ANSEM (spot from Jupiter quote, refreshed every 60s).
 - **$PWIRE tier:** client calls `POST /v1/tier` with `{wallet, nonce, signature}`; if the $PWIRE balance ≥ threshold, return a short-lived tier token; paid routes then advertise a 50% price and a priority queue.
 
 ## Verification must enforce
 Amount, mint, recipient ATA = payTo, network, not-before/expiry, and replay protection (store used payment ids/sigs). Reject everything else with 402.
 
 ## Calls log
-After settlement, insert into `calls(tool, arg, payer, asset, amount, tx_sig, score, latency_ms, first_party, ts)`. `first_party = payer ∈ OUR_WALLETS`.
+After settlement, insert into `calls(tool, arg, payer, asset, amount, tx_sig, score, latency_ms, first_party, ts)`. `first_party = payer ∈ FIRST_PARTY_WALLETS`.
 
 ## Done when (G3/G4)
 Devnet: 20 paid calls OK; underpaid / wrong mint / replayed payments rejected. Mainnet: Mises approves payTo + prices; 3 real calls visible on Solscan and /live.

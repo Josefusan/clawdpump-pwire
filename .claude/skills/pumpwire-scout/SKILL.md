@@ -22,7 +22,7 @@ Fund Scout's wallet with a small amount: ~$10 USDC + ~0.02 SOL for fees. **Mises
 5. After 1h and 24h: re-check the outcome (dead? dumped?) and feed the "Caught it" board.
 
 ## Stream demo script
-New launch → Scout pays $0.01 (show Solscan) → EXTREME with reasons → switch `PUMPWIRE_PAY_ASSET=ANSEM` → pay in $ANSEM live → show /live counters move.
+New launch → Scout pays $0.01 (show Solscan) → EXTREME with reasons → switch `PUMPWIRE_PAY_ASSET=ANSEM` → pay in $ANSEM live (only if $ANSEM is enabled — planned) → show /live counters move.
 
 ## Never
 Trade tokens, exceed caps, post without approval, or buy $PWIRE.

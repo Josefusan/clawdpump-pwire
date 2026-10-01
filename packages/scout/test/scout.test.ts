@@ -94,6 +94,7 @@ describe('alerts', () => {
     expect(md).toContain('EXTREME');
     expect(md).toContain(`https://solscan.io/token/${HOT}?cluster=devnet`);
     expect(md).toContain('bundled_launch (+20)');
+    expect(md).toContain('Ab12…Cd34'); // the scorer's shortened addresses keep their ellipsis
     expect(md).toContain('Risk signal, not advice');
     expect(md.toLowerCase()).not.toContain('scam');
     expect(md).not.toMatch(/moon|buyback|yield|guaranteed/i);

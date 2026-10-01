@@ -44,7 +44,7 @@ export const isAlertWorthy = (r: RiskLike): boolean => r.verdict === 'HIGH' || r
 /** Printable, single-line, bounded: token metadata and reason text are attacker-influenced. */
 const clean = (s: unknown, max: number): string =>
   String(s ?? '')
-    .replace(/[^\x20-\x7E]/g, '')
+    .replace(/[^\x20-\x7E\u2026]/g, '') // printable ASCII plus the ellipsis the scorer uses in shortened addresses
     .slice(0, max);
 
 const short = (a: string): string => `${a.slice(0, 4)}…${a.slice(-4)}`;
