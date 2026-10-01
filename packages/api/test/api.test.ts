@@ -4,7 +4,8 @@ import { DatabaseSync } from 'node:sqlite';
 import type { Server } from 'node:http';
 import { encodePaymentSignatureHeader } from '@x402/core/http';
 import type { PaymentRequirements } from '@x402/core/types';
-import { createApp, memoFor, type Backend } from '../src/app.js';
+import { createApp, memoFor, MAX_MEMO_BYTES, type Backend } from '../src/app.js';
+import { createHash } from 'node:crypto';
 import { base58Decode, base58Encode, isBase58Pubkey } from '../src/base58.js';
 import { applySchema, claimPayment, markFailed, setTxSig, STALE_PENDING_S } from '../src/calls.js';
 import type { Config } from '../src/config.js';
@@ -114,9 +115,22 @@ describe('402 path', () => {
     expect(body.accepts).toHaveLength(1);
     expect(body.accepts[0]).toMatchObject({
       scheme: 'exact', network: NETWORK, amount: '10000', asset: USDC, payTo: PAYTO, maxTimeoutSeconds: 60,
-      extra: { feePayer: FEE_PAYER, memo: `pumpwire:rug_risk_score:${mint}` },
+      extra: { feePayer: FEE_PAYER, memo: memoFor(mint) },
     });
     expect(callRows()).toHaveLength(0);
+  });
+});
+
+describe('payment memo', () => {
+  it('fits the stock x402 SVM compute budget and still binds tool + mint', () => {
+    const longest = '1'.repeat(12) + 'z'.repeat(32); // 44-char base58 mint, the longest possible
+    for (const m of [mint, longest]) {
+      const memo = memoFor(m);
+      expect(Buffer.byteLength(memo, 'utf8')).toBeLessThanOrEqual(MAX_MEMO_BYTES);
+      expect(memo).toBe(`pumpwire:${createHash('sha256').update(`rug_risk_score:${m}`).digest('hex').slice(0, 20)}`);
+    }
+    expect(memoFor(mint)).not.toBe(memoFor(rndKey()));
+    expect(memoFor(mint)).toBe(memoFor(mint)); // deterministic
   });
 });
 

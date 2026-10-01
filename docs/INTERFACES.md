@@ -218,7 +218,7 @@ Order of checks — **never charge for a request we cannot serve**:
 Header names (`PAYMENT-REQUIRED` / `PAYMENT-SIGNATURE` / `PAYMENT-RESPONSE` in V2 vs `X-PAYMENT` /
 `X-PAYMENT-RESPONSE` in V1) are produced by `@x402/express`; builders use the library's constants — **VERIFY**.
 Direct-transfer fallback (ADR-002): request header `X-PUMPWIRE-TX: <TxSig>`; advertised only when `X402_DIRECT_FALLBACK=1`.
-The fallback tx MUST include a Memo instruction `pumpwire:<tool>:<arg>` (here `pumpwire:rug_risk_score:<mint>`);
+The fallback tx MUST include a Memo instruction `pumpwire:<h>` where `<h>` = first 20 hex chars of sha256(`<tool>:<arg>`) (same memo the 402 advertises in `extra.memo`; ≤ 32 bytes so it fits the stock x402 SVM client's 20,000-CU budget);
 the server rejects (`402 PAYMENT_INVALID`) any tx whose memo does not byte-equal the current request's tool and arg.
 
 **200 body example**
@@ -320,7 +320,7 @@ facilitator response validation (`isValid === true`; settle `success === true`, 
 is a `TxSig`, `network` matches); after settle, set `tx_sig` (UNIQUE) and async re-confirm via
 `SOLANA_RPC_URL` → `onchain_confirmed`. Rate limit per IP and per payer.
 Direct-transfer fallback (§4.4, ADR-002): the tx must contain exactly one Memo instruction whose data is
-byte-equal to `pumpwire:<tool>:<arg>` for this request (e.g. `pumpwire:rug_risk_score:<mint>`); mismatch or
+byte-equal to `pumpwire:<h>`, `<h>` = sha256(`<tool>:<arg>`)[0..20 hex], for this request (the 402's `extra.memo`); mismatch or
 missing memo → `402 PAYMENT_INVALID` and no `calls` row is claimed. This binds a public signature to the
 resource its payer chose.
 
