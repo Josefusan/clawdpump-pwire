@@ -51,7 +51,7 @@ beforeEach(async () => {
         resource: { url: `${url}${req.url}`, mimeType: 'application/json' },
         accepts: [{
           scheme: 'exact', ...offer, payTo: 'PayTo1111111111111111111111111111111111111', maxTimeoutSeconds: 60,
-          extra: { feePayer: 'Fee1111111111111111111111111111111111111111', memo: `pumpwire:rug_risk_score:${mint}` },
+          extra: { feePayer: 'Fee1111111111111111111111111111111111111111', memo: `pumpwire:${Buffer.from(mint).toString('hex').slice(0, 20)}` },
         }],
       };
       return json(402, body, { 'PAYMENT-REQUIRED': encodePaymentRequiredHeader(body as never) });

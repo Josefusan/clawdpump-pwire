@@ -37,7 +37,15 @@ export function isTxSig(s: unknown): s is string {
   return typeof s === 'string' && /^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(s) && base58Decode(s)?.length === 64;
 }
 
-export const memoFor = (mint: string): string => `pumpwire:${TOOL}:${mint}`;
+/**
+ * Memo that binds a payment to this exact request: `pumpwire:` + 20 hex chars of sha256(`<tool>:<arg>`) (80 bits).
+ * Short on purpose: the stock x402 SVM client fixes the payment tx at 20,000 compute units and the SPL Memo program
+ * costs ~380 CU per byte, so the old `pumpwire:<tool>:<mint>` (68 bytes) failed simulation for every payer
+ * (measured on devnet 2026-10-01: 44 bytes OK, 56 bytes FAIL). 29 bytes uses ~12k CU. Keep it ≤ MAX_MEMO_BYTES.
+ */
+export const MAX_MEMO_BYTES = 32;
+export const memoFor = (mint: string): string =>
+  `pumpwire:${createHash('sha256').update(`${TOOL}:${mint}`).digest('hex').slice(0, 20)}`;
 
 function fail(res: Response, status: number, error: ErrorCode, message: string) {
   return res.status(status).json({ error, message });
