@@ -1,7 +1,7 @@
 # PumpWire ($PWIRE): AnsemHack Clawrena submission
 
 Track: **ClawPump x pump.fun** (also entered for Overall Winner). Entry post on X: https://x.com/Josefusan111/status/2105017820816019781 (tags @clawpumptech).
-Token: $PWIRE, launched on ClawPump. Mint: `{{PWIRE_MINT}}`.
+Token: $PWIRE, launched on ClawPump. Mint: [`2b2Tv315U1FUtYF9Y1H2b2qrCnL3tN5QPabScFPCw8vw`](https://solscan.io/token/2b2Tv315U1FUtYF9Y1H2b2qrCnL3tN5QPabScFPCw8vw) (mint and freeze authority revoked).
 Repo: https://github.com/Josefusan/clawdpump-pwire. Every number below names the command and the UTC time it was run.
 
 ## 1. What it is
@@ -30,7 +30,7 @@ Every call is risk information, not advice.
 
 ## 3. Proof a judge can open
 
-All figures are devnet. Commands were run read-only against the team server on 2026-10-01.
+All figures in the table below are devnet. Commands were run read-only against the team server on 2026-10-01.
 
 | Item | Value | Source and UTC time |
 |---|---|---|
@@ -44,8 +44,8 @@ All figures are devnet. Commands were run read-only against the team server on 2
 | Devnet tx 1 | https://solscan.io/tx/5kA5iDWoXiTb4ynKimxGyWXeh8ctA6648WMq3ycJhhhMApqCiDTyXAh5sdPihg7GGNA1qu9dwD7QNMdqj9jL4GJb?cluster=devnet | `select tx_sig from calls ... order by id limit 3`, 19:04:11Z |
 | Devnet tx 2 | https://solscan.io/tx/4STJRyjAEzcpSzRVpGByVPwytQckckg1dqmj6F7R41VRqtLdZmgQDLkSgMUMTkNx4DYvd2AnxBtEBw4EaUokdhEY?cluster=devnet | same |
 | Devnet tx 3 | https://solscan.io/tx/4AeBSpFWcCBn5SMDtW8zMHrJ4gMrsSSDfxBnV3eyeMnDp1etfS5y5XK43nXtKXzkaNiHR5vJ2UJkC149R4LEonqq?cluster=devnet | same |
-| Public dashboard | `{{LIVE_URL}}/live` | not yet assigned |
-| Stats JSON | `{{LIVE_URL}}/v1/stats` | not yet assigned |
+| Public dashboard | https://formation-parental-nuclear-fair.trycloudflare.com/live/ | mainnet, verified from outside 2026-10-01 |
+| Stats JSON | https://formation-parental-nuclear-fair.trycloudflare.com/v1/stats | same |
 
 The 67 vs 68 gap is two seconds of Scout activity: `/v1/stats` was read at 19:04:09Z, the database at
 19:04:11Z, and one more call settled in between.
@@ -55,10 +55,21 @@ Each Solscan link should show a successful transaction with a 0.01 USDC transfer
 
 ### Mainnet
 
-`{{MAINNET_TXS}}`
+PumpWire went live on Solana mainnet on 2026-10-01 at 21:37Z. The Scout agent pays the API in real
+USDC (mint `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`) through the PayAI facilitator.
 
-Mainnet is not live yet. When it is, this section lists the first paid mainnet calls as
-`https://solscan.io/tx/<sig>` links, with the counts from `/v1/stats` and the UTC time they were read.
+| Item | Value | Source |
+|---|---|---|
+| Paid calls (mainnet) | 250: 250 first-party, 0 third-party | `GET /v1/stats`, 2026-10-01 22:54:52Z |
+| USDC paid over x402 | 2.500000 USDC | same |
+| Network | `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` (mainnet) | same |
+| First mainnet tx | https://solscan.io/tx/2g4VYTEXJHv3ERz2j37JKQH5ppMKuoH8yZAvT4rvp6bqFjUC7yCCAcE525fVVuXyVix7ziCWnreaMUDGsyqPGLu | finalized, slot 452410434 |
+| Mainnet tx 2 | https://solscan.io/tx/5RVyKA9XM7vrbRitLUG4PxGmUgwcz6dKNxZ9MAkt6HJMDiLAPkdvkBmhkxKqGxytg4dFVdrYQQLV3YXHL1VZK9Ec | `/v1/stats` `last_calls` |
+| Mainnet tx 3 | https://solscan.io/tx/2xxxJgUs8cRfnvsGB2d2UXDcGHAFTjG5PQuPoJqApHvYKBN98SvMVc3WGqxeeMqCbzfxVjWuwQcq6HTqRVQuwjPP | same |
+
+Each link shows 0.01 USDC from the Scout wallet `DtGk…p5Mf` to the payee `6TeX…c8Se`. The fee payer
+is the facilitator (`CjNF…eKww`), not the Scout. All of these calls are first-party: PumpWire paying
+itself to prove the rail works. They are not customer revenue.
 
 ## 4. Try it in 5 minutes
 
@@ -68,7 +79,7 @@ Mainnet is not live yet. When it is, this section lists the first paid mainnet c
   walkthroughs with the exact response shapes.
 - **Scripts, no chat client:** [examples/](../examples/README.md). `x402-fetch.mjs <mint>` prints the
   402 offer and signs nothing; `--pay` completes the call. `stats.mjs` reads the free counters.
-- The API URL is `{{LIVE_URL}}` once assigned. Until then the devnet API runs on the team server only.
+- The mainnet API URL is https://formation-parental-nuclear-fair.trycloudflare.com (a Cloudflare tunnel to the team server). `GET /v1/risk/<mint>` returns the 402 offer.
 
 Nothing is paid without `--pay` or an explicit tool call, and never above the caps you set.
 
@@ -83,8 +94,8 @@ Nothing is paid without `--pay` or an explicit tool call, and never above the ca
 
 ## 6. Honest status and limits
 
-- **Devnet today, mainnet pending.** The cutover script and runbook exist; the public URL and mainnet
-  payee are not yet live.
+- **Mainnet live since 2026-10-01.** The devnet deployment stays up for testing. Every paid call so far
+  is first-party (see §3).
 - **Scores are mostly LOW/MED right now.** Deployer history and outcome labels need time to accumulate,
   and wallet enrichment is still filling in. Factors with missing data score 0 and are listed in
   `data_gaps`; a 0 for a gap is not a clean bill.
