@@ -6,6 +6,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "ingest": "tsc -b && node --experimental-sqlite dist/main.js",
+    "test": "NODE_OPTIONS=--experimental-sqlite vitest run --root ../.. packages/ingest"
   }
 }
