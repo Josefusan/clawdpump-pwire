@@ -50,7 +50,9 @@ export function buildSnapshotAsOf(db, token, asOfTs) {
   const wallets = {};
   const wq = db.prepare('SELECT address, first_seen_ts, tx_count, funder, funder_ts, enriched_at FROM wallets WHERE address = ?');
   for (const w of [token.deployer, ...buyers]) { const r = wq.get(w); if (r) wallets[w] = r; }
-  const deployer_prior = db.prepare('SELECT mint, outcome, created_at FROM tokens WHERE deployer = ? AND created_at < ? AND mint != ?').all(token.deployer, token.created_at, token.mint);
+  // No lookahead: a prior launch's outcome only counts if it was already decided at asOfTs (outcome_at <= asOfTs).
+  const deployer_prior = db.prepare('SELECT mint, outcome, outcome_at, created_at FROM tokens WHERE deployer = ? AND created_at < ? AND mint != ?').all(token.deployer, token.created_at, token.mint)
+    .map((p) => ({ mint: p.mint, created_at: p.created_at, outcome: p.outcome != null && p.outcome_at != null && p.outcome_at <= asOfTs ? p.outcome : null }));
   const trending_symbols = db.prepare(`SELECT t.mint, lower(t.symbol) AS symbol_norm FROM tokens t JOIN trades r ON r.mint = t.mint
     WHERE r.ts BETWEEN ? AND ? AND t.mint != ? AND t.symbol IS NOT NULL GROUP BY t.mint ORDER BY count(*) DESC LIMIT 20`).all(asOfTs - 86400, asOfTs, token.mint)
     .map((r) => ({ mint: r.mint, symbol_norm: String(r.symbol_norm ?? '').normalize('NFKC').toLowerCase().replace(/[^a-z0-9]/g, '') }));
@@ -98,13 +100,14 @@ export async function run(args) {
   const tokens = db.prepare('SELECT * FROM tokens WHERE created_at <= ? ORDER BY created_at').all(args.now - args.minAge);
   const tradesFor = db.prepare('SELECT sig, mint, wallet, side, lamports, token_amount, slot, ts FROM trades WHERE mint = ? ORDER BY ts, sig');
   const rows = [];
+  let scorer_errors = 0;
   for (const tk of tokens) {
     const trades = tradesFor.all(tk.mint);
     const outcome = tk.outcome ?? labelToken(tk, trades, args.now, args.minAge);
     let verdict = null, score = null;
     if (scorer) {
       try { const r = scorer.score(buildSnapshotAsOf(db, tk, tk.created_at + args.scoreAt)); verdict = r.verdict; score = r.score; out.model_version = r.model_version ?? out.model_version; }
-      catch (e) { verdict = null; score = null; }
+      catch (e) { verdict = null; score = null; scorer_errors++; }
     }
     rows.push({ mint: tk.mint, created_at: tk.created_at, outcome, verdict, score });
   }
@@ -112,6 +115,7 @@ export async function run(args) {
   Object.assign(out, { n: s.n, n_labelled: s.n_labelled, counts: s.counts, precision_high_plus: s.precision_high_plus, recall_high_plus: s.recall_high_plus, tp: s.tp, fp: s.fp, fn: s.fn });
   if (!scorer) out.caveat = 'scorer not built (packages/score has no score() yet): labels only, no precision/recall';
   else if (s.n < 100) out.caveat = `small sample (n=${s.n}): indicative only, not a claim`;
+  if (scorer_errors) { out.scorer_errors = scorer_errors; out.caveat = `${out.caveat ? out.caveat + '; ' : ''}scorer threw on ${scorer_errors} launch(es), counted as unscored`; }
   db.close();
   return { out, rows };
 }
