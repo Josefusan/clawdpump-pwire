@@ -30,6 +30,18 @@ Order matters: `DEV_DUMP` wins over `SURVIVED_24H` (a dumped token can keep trad
 - Labels are mechanical. "Dead in 1 h" on pump.fun also catches tokens nobody noticed; precision at HIGH+ is therefore the number to watch, recall will look low by construction.
 - Scoring at T+2 min uses a snapshot built in the harness (`buildSnapshotAsOf`) with the pump.fun fixed supply constant; T-010 may replace it with `buildSnapshot()` from `@pumpwire/score`.
 
+## Outcome labeller (feeds the scorer and the "Caught it" board)
+
+`scripts/label-outcomes.mjs` applies the same rules to the **live** DB and fills `tokens.outcome` / `tokens.outcome_at`
+for launches older than `--min-age` (default 2 h). Without it, `deployer_history` (25 of 100 points) never fires and
+`/v1/stats.caught` stays empty. Hourly cron on the devnet box (names only; the Joseph-run VPS script installs it):
+
+```
+17 * * * * $HOME/pumpwire-node/bin/node --experimental-sqlite $HOME/pumpwire-devnet/scripts/label-outcomes.mjs --db $HOME/pumpwire-data/pumpwire.db >> $HOME/pumpwire-data/label-outcomes.log 2>&1
+```
+
+`--dry-run` prints counts without writing. Exits 0 when the DB does not exist yet. Tests: `scripts/test/label-outcomes.test.ts`.
+
 ## Latest run
 
 Not run yet on real data (no launches ingested at the time of writing). The harness was verified on an empty DB (`n=0`, exit 0) and on a seeded DB with one dead, one dumped and one survived launch using a stub scorer (precision 100%, recall 50%, tp=1 fp=0 fn=1).
