@@ -30,7 +30,7 @@ Every call is risk information, not advice.
 
 ## 3. Proof a judge can open
 
-All figures are devnet. Commands were run read-only against the team server on 2026-10-01.
+All figures in the table below are devnet. Commands were run read-only against the team server on 2026-10-01.
 
 | Item | Value | Source and UTC time |
 |---|---|---|
@@ -94,8 +94,8 @@ Nothing is paid without `--pay` or an explicit tool call, and never above the ca
 
 ## 6. Honest status and limits
 
-- **Devnet today, mainnet pending.** The cutover script and runbook exist; the public URL and mainnet
-  payee are not yet live.
+- **Mainnet live since 2026-10-01.** The devnet deployment stays up for testing. Every paid call so far
+  is first-party (see §3).
 - **Scores are mostly LOW/MED right now.** Deployer history and outcome labels need time to accumulate,
   and wallet enrichment is still filling in. Factors with missing data score 0 and are listed in
   `data_gaps`; a 0 for a gap is not a clean bill.

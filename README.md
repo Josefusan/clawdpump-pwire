@@ -151,7 +151,7 @@ npm test                             # vitest across all packages
 # 3 · run the stack
 node --experimental-sqlite --env-file=$HOME/.config/pumpwire/devnet.env packages/ingest/dist/main.js   # pump.fun → SQLite
 node --experimental-sqlite --env-file=$HOME/.config/pumpwire/devnet.env packages/api/dist/index.js     # x402 API + /live
-# production: pm2 start ecosystem.devnet.config.cjs  (ingest, api, scout); docs/RUNBOOK.md
+# devnet via pm2: pm2 start ecosystem.devnet.config.cjs  (ingest, api, scout); production runs the mainnet ecosystem config, see docs/RUNBOOK.md
 ```
 
 ## Integrate in 2 minutes
