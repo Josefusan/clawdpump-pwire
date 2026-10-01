@@ -33,3 +33,6 @@ npm-debug.log*
 .DS_Store
 .vscode/
 .idea/
+
+# ts build info
+*.tsbuildinfo
