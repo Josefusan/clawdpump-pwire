@@ -5,8 +5,8 @@ Status: accepted (T-002) · Context: 01 §Architecture, 03 §Infra, D-001
 - Node.js + TypeScript (ESM) monorepo, `packages/{ingest,score,api,mcp,live,scout}` (INTERFACES §1).
 - SQLite in WAL mode via `better-sqlite3` (sync, prepared statements); schema = `docs/schema.sql`.
   DB at `~/pumpwire-data/pumpwire.db`, hourly `snapshot.db` (D-001); ingest and api each write only their own tables.
-- HTTP: `express` + `@x402/express` / `@x402/core` / `@x402/svm` (x402 V2, `exact` scheme).
-- MCP: `pumpwire-mcp` over stdio + streamable HTTP, paying with `@x402/fetch` + `@x402/svm`.
+- HTTP: `express` + `@x402/express` / `@x402/core` / `@x402/svm` (x402 V2, `exact` scheme) — package names VERIFY.
+- MCP: `pumpwire-mcp` over stdio + streamable HTTP, paying with `@x402/fetch` + `@x402/svm` — package names VERIFY.
 - Tests: `vitest`; scoring is a pure function tested from fixtures (INTERFACES §5.4).
 - Ops: `pm2` process manager, Caddy for TLS on the Contabo VPS; secrets in `~/.config/pumpwire/*.env`.
 

@@ -205,7 +205,7 @@ Order of checks — **never charge for a request we cannot serve**:
   "resource": { "url": "https://<host>/v1/risk/<mint>", "description": "PumpWire rug-risk score for a pump.fun mint", "mimeType": "application/json" },
   "accepts": [{
     "scheme": "exact",
-    "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",   // X402_NETWORK; devnet solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1
+    "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",   // X402_NETWORK; devnet solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1 — both CAIP-2 IDs VERIFY
     "amount": "10000",                                    // $0.01 in USDC base units (6 decimals — VERIFY)
     "asset": "<USDC_MINT>",
     "payTo": "<PAYTO_ADDRESS>",                           // owner wallet; funds land in its USDC ATA
@@ -218,6 +218,8 @@ Order of checks — **never charge for a request we cannot serve**:
 Header names (`PAYMENT-REQUIRED` / `PAYMENT-SIGNATURE` / `PAYMENT-RESPONSE` in V2 vs `X-PAYMENT` /
 `X-PAYMENT-RESPONSE` in V1) are produced by `@x402/express`; builders use the library's constants — **VERIFY**.
 Direct-transfer fallback (ADR-002): request header `X-PUMPWIRE-TX: <TxSig>`; advertised only when `X402_DIRECT_FALLBACK=1`.
+The fallback tx MUST include a Memo instruction `pumpwire:<tool>:<arg>` (here `pumpwire:rug_risk_score:<mint>`);
+the server rejects (`402 PAYMENT_INVALID`) any tx whose memo does not byte-equal the current request's tool and arg.
 
 **200 body example**
 ```json
@@ -232,7 +234,10 @@ MVP+/STRETCH routes (same pattern, not frozen yet): `GET /v1/deployer/:wallet` (
 ## 5. Rug-risk scoring v0 (`model_version = "v0.1.0"`)
 
 Implements 01 §Rug-risk scoring v0 with exact formulas. All points are integers
-(`round` = round half up). Thresholds are v0 priors; recalibrate only via backtest + ADR + version bump.
+Thresholds are v0 priors; recalibrate only via backtest + ADR + version bump.
+Rounding: every `round(n/d)` is done on integers before any float division — `round(n/d) = floor((2n + d) / (2d))`
+for integer n ≥ 0, d > 0 (half up). Percentages enter as integer basis points (`bp = floor(10000·a/b)`), e.g.
+holder_concentration points = `round(15·(bp − 1500) / 2000)`.
 
 ### 5.1 Definitions
 - `early window` = trades with `slot ∈ [created_slot, created_slot + 2]`.
@@ -245,7 +250,7 @@ Implements 01 §Rug-risk scoring v0 with exact formulas. All points are integers
 |---|---|---|---|---|---|
 | 1 | `deployer_history` | 25 | count of `deployer_prior` with `outcome ∈ {DEAD_1H, DEV_DUMP}` | v=0→0, 1→10, 2→18, ≥3→25 | never (0 prior = 0 pts) |
 | 2 | `bundled_launch` | 20 | size of the largest group of early-window buyers (excl. deployer) sharing a non-null `funder` (funder = deployer counts) | v<3→0, else `min(20, 4·v)` | < 3 early buyers enriched |
-| 3 | `holder_concentration` | 15 | top-10 `balance` sum / `total_supply` × 100 | v≤15→0, v≥35→15, else `round(15·(v−15)/20)` | no trades |
+| 3 | `holder_concentration` | 15 | top-10 `balance` sum / `total_supply` × 100 | v≤15→0, v≥35→15, else `round(15·(v−15)/20)` | no trades, or `total_supply ≤ 0` (guard: 0 pts, never divide) |
 | 4 | `dev_position` | 10 | `hold% = balance(deployer)/supply·100`; `sold% = dev sells/dev buys·100` (0 if no buys) | 10 if hold% > 10 or sold% > 50, else 0; `v` = whichever triggered (sold% first) | never |
 | 5 | `fresh_wallets` | 10 | `r` = fresh / enriched among first 30; fresh = `buy_ts − first_seen_ts < 86400` and `tx_count < 3` | r≤0.2→0, r≥0.7→10, else `round(10·(r−0.2)/0.5)`; `v = round(100·r)` | < 5 enriched |
 | 6 | `funding_cluster` | 10 | largest group of first-30 buyers sharing `funder` with `first_buy_ts − funder_ts ≤ 21600` | v<3→0, else `min(10, 2·v)` | < 5 enriched |
@@ -308,9 +313,16 @@ Must enforce per request: exact `amount`; `asset == USDC_MINT` (or enabled STRET
 destination = ATA(`PAYTO_ADDRESS`, asset); `network == X402_NETWORK`; age ≤ `maxTimeoutSeconds`;
 replay: `INSERT calls(payment_id UNIQUE)` **before** serving — conflict → `402 PAYMENT_REPLAYED`
 unless same `tool`+`arg` and `status='served'` (idempotent re-serve of `result_json`, 200);
+retry after failure: same `payment_id` + same `tool`+`arg` with `status='failed'` (or `'pending'` older
+than 120 s) re-runs scoring on the existing row and flips it to `served`; it never re-settles a row whose
+`tx_sig` is set, and a different `tool`/`arg` is still `PAYMENT_REPLAYED`;
 facilitator response validation (`isValid === true`; settle `success === true`, `transaction`
 is a `TxSig`, `network` matches); after settle, set `tx_sig` (UNIQUE) and async re-confirm via
-`SOLANA_RPC_URL` → `onchain_confirmed`. Rate limit per IP and per payer. Fallback: §4.4 / ADR-002.
+`SOLANA_RPC_URL` → `onchain_confirmed`. Rate limit per IP and per payer.
+Direct-transfer fallback (§4.4, ADR-002): the tx must contain exactly one Memo instruction whose data is
+byte-equal to `pumpwire:<tool>:<arg>` for this request (e.g. `pumpwire:rug_risk_score:<mint>`); mismatch or
+missing memo → `402 PAYMENT_INVALID` and no `calls` row is claimed. This binds a public signature to the
+resource its payer chose.
 
 ## 8. Untrusted data (token metadata, WS payloads, RPC/facilitator responses)
 - `name`, `symbol`, `uri`, description and any JSON at `uri` are attacker-controlled.
