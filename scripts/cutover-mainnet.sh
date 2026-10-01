@@ -88,6 +88,8 @@ fi
 
 echo "== deploy =="
 npm run build --workspaces --if-present
+# startOrReload reuses the old exec path of an existing process: drop the devnet-defined ingest first.
+pm2 delete pumpwire-ingest || true
 pm2 startOrReload "$ECO" --update-env
 pm2 status
 
