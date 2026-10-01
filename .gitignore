@@ -33,3 +33,6 @@ npm-debug.log*
 .DS_Store
 .vscode/
 .idea/
+
+# tsc incremental state (per machine)
+*.tsbuildinfo
