@@ -23,6 +23,8 @@ transaction. $ANSEM payment and a $PWIRE holder tier are planned (not live yet).
 
 ## Use it in 5 minutes
 
+**Judges:** start with [docs/SUBMISSION.md](./docs/SUBMISSION.md).
+
 - **Hermes / claw-agent:** [`hermes/`](./hermes/README.md) — register the MCP server, drop in the skill, ask *"rug check `<mint>`"*.
 - **Any MCP client (Claude Code, Claude Desktop, Cursor):** the config block is in [`docs/USE-CASES.md`](./docs/USE-CASES.md#b-claude-code--claude-desktop-mcp-config--sample-prompt).
 - **Any language over HTTP:** `GET /v1/risk/:mint` → `402` with the price → pay → `200`. Runnable: [`examples/x402-fetch.mjs`](./examples/README.md).
