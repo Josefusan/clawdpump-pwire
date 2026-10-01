@@ -52,11 +52,18 @@ export function buildStats(db: DatabaseSync, cfg: Config, nowS: number) {
   const n = (sql: string, ...p: (string | number)[]): number =>
     Number((db.prepare(sql).get(...p) as { v: number | null }).v ?? 0);
 
+  // First-party is decided at query time from the CURRENT allowlist (plus payTo itself), not only the flag frozen at
+  // claim time, so adding the Scout wallet to FIRST_PARTY_WALLETS later still relabels its history (clawrena-compliance).
+  const fpWallets = [...new Set([cfg.payTo, ...cfg.firstPartyWallets])];
+  const fpSet = new Set(fpWallets);
+  const FP = `(first_party = 1 OR payer IN (${fpWallets.map(() => '?').join(',')}))`;
+
   const paid = n(`SELECT COUNT(*) AS v FROM calls WHERE ${SERVED}`);
-  const fp = n(`SELECT COUNT(*) AS v FROM calls WHERE ${SERVED} AND first_party = 1`);
+  const fp = n(`SELECT COUNT(*) AS v FROM calls WHERE ${SERVED} AND ${FP}`, ...fpWallets);
   const usdcUnits = n(`SELECT SUM(amount) AS v FROM calls WHERE ${SERVED} AND asset = ?`, cfg.usdcMint);
   const payers = n(`SELECT COUNT(DISTINCT payer) AS v FROM calls WHERE ${SERVED}`);
-  const integrators = n(`SELECT COUNT(DISTINCT payer) AS v FROM calls WHERE ${SERVED} AND first_party = 0`);
+  // "integrators" = distinct third-party paying wallets (INTERFACES §4.3). A wallet is not a verified builder.
+  const integrators = n(`SELECT COUNT(DISTINCT payer) AS v FROM calls WHERE ${SERVED} AND NOT ${FP}`, ...fpWallets);
 
   const last_calls = (
     db
@@ -65,7 +72,7 @@ export function buildStats(db: DatabaseSync, cfg: Config, nowS: number) {
          FROM calls WHERE ${SERVED} ORDER BY ts DESC, id DESC LIMIT 50`,
       )
       .all() as Record<string, string | number | null>[]
-  ).map((r) => ({ ...r, first_party: r.first_party === 1 }));
+  ).map((r) => ({ ...r, first_party: r.first_party === 1 || fpSet.has(String(r.payer)) }));
 
   const caught = db
     .prepare(

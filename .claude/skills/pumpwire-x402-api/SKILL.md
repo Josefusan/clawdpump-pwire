@@ -37,7 +37,7 @@ app.use(paymentMiddleware({
 Amount, mint, recipient ATA = payTo, network, not-before/expiry, and replay protection (store used payment ids/sigs). Reject everything else with 402.
 
 ## Calls log
-After settlement, insert into `calls(tool, arg, payer, asset, amount, tx_sig, score, latency_ms, first_party, ts)`. `first_party = payer ∈ OUR_WALLETS`.
+After settlement, insert into `calls(tool, arg, payer, asset, amount, tx_sig, score, latency_ms, first_party, ts)`. `first_party = payer ∈ FIRST_PARTY_WALLETS`.
 
 ## Done when (G3/G4)
 Devnet: 20 paid calls OK; underpaid / wrong mint / replayed payments rejected. Mainnet: Mises approves payTo + prices; 3 real calls visible on Solscan and /live.

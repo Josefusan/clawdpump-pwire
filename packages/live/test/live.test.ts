@@ -150,7 +150,7 @@ describe('live package', () => {
       ['USDC paid', '0.03 USDC'],
       ['$ANSEM paid', '0 ANSEM'],
       ['unique payers', '2'],
-      ['integrators', '1'],
+      ['third-party wallets', '1'],
     ]);
     expect(vm.split.firstParty).toBe(2);
     expect(vm.split.thirdParty).toBe(1);
@@ -160,11 +160,11 @@ describe('live package', () => {
       ago: '1m ago', tool: 'rug_risk_score', mint: 'sWZC…pump', score: '62', verdict: 'HIGH',
       verdictClass: 'v-high', party: 'first-party', latency: '1512 ms',
     });
-    expect(vm.calls[0].mintHref).toBe(`https://solscan.io/account/${MINT}?cluster=devnet`);
+    expect(vm.calls[0].mintHref).toBe(`https://solscan.io/token/${MINT}`); // mints are mainnet accounts even on devnet
     expect(vm.calls[0].txHref).toBe(`https://solscan.io/tx/${SIG}?cluster=devnet`);
     expect(vm.calls[1]).toMatchObject({ score: '—', verdict: '—', verdictClass: 'v-none', party: 'third-party', latency: '—' });
     expect(vm.caught[0]).toMatchObject({ verdict: 'EXTREME', verdictClass: 'v-extreme', outcome: 'DEAD_1H', scoredAgo: '2h ago' });
-    expect(vm.backtest).toEqual({ model: 'v0.1.0', n: '42', precision: '71%', recall: '50%', small: true });
+    expect(vm.backtest).toEqual({ model: 'v0.1.0', n: '42', precision: '71%', recall: '50%', small: true, caveat: null });
   });
 
   it('keeps only the 50 newest calls and labels the network + verdicts safely', () => {
@@ -261,12 +261,12 @@ describe('live package', () => {
     expect(html).toContain('USDC paid');
     expect(html).toContain('$ANSEM paid');
     expect(html).toContain('unique payers');
-    expect(html).toContain('integrators');
+    expect(html).toContain('third-party wallets');
     expect(html).toContain('first-party');
     expect(html).toContain('third-party');
     expect(html).toContain('v0.1.0');
     expect(html).toContain(`https://solscan.io/tx/${SIG}?cluster=devnet`);
-    expect(html).toContain(`https://solscan.io/account/${MINT}?cluster=devnet`);
+    expect(html).toContain(`https://solscan.io/token/${MINT}`);
     expect(first.textOf('[data-split]')).toContain('first-party');
   });
 
@@ -289,5 +289,20 @@ describe('live package', () => {
     // a failed poll leaves the static placeholders in place instead of throwing
     expect(bad.textOf('[data-calls]')).toBeNull();
     expect(shortAddr(PAYER)).toBe('DtGk…p5Mf');
+  });
+});
+
+describe('honest rendering of unknowns', () => {
+  it('never prints a false 0% for a null precision/recall and shows the harness caveat', () => {
+    const vm = buildViewModel({ ...statsResponse(), backtest: { model_version: 'v0.1.0', n: 0, precision_high_plus: null, recall_high_plus: null, caveat: 'scorer not built' } }, NOW);
+    expect(vm.backtest).toEqual({ model: 'v0.1.0', n: '0', precision: '—', recall: '—', small: true, caveat: 'scorer not built' });
+    expect(backtestText(vm.backtest)).toBe('v0.1.0: harness ran, no labelled launches yet (n = 0) — scorer not built');
+    const vm2 = buildViewModel({ ...statsResponse(), backtest: { model_version: 'v0.1.0', n: 12, precision_high_plus: null, recall_high_plus: 0.25 } }, NOW);
+    expect(backtestText(vm2.backtest)).toBe('v0.1.0: precision at HIGH+ —, recall 25%, n = 12 (small sample — indicative only)');
+  });
+
+  it('labels a call "unlabelled" when first_party is not a boolean instead of silently calling it third-party', () => {
+    const vm = buildViewModel({ ...statsResponse(), last_calls: [{ ...statsResponse().last_calls[0], first_party: undefined }] }, NOW);
+    expect(vm.calls[0].party).toBe('unlabelled');
   });
 });
