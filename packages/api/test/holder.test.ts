@@ -8,7 +8,8 @@ import { createApp, memoFor, MAX_MEMO_BYTES, type Backend } from '../src/app.js'
 import { base58Decode, base58Encode } from '../src/base58.js';
 import { applySchema } from '../src/calls.js';
 import type { Config } from '../src/config.js';
-import { holderCheck, HOLDER_CACHE_S } from '../src/holder.js';
+import { holderCheck, HOLDER_CACHE_S, HOLDER_LOOKUPS_PER_MIN } from '../src/holder.js';
+import { loadConfig } from '../src/config.js';
 import { MEMO_PROGRAMS } from '../src/tx.js';
 
 const MEMO_PROGRAM = [...MEMO_PROGRAMS][0]!;
@@ -142,13 +143,30 @@ describe('holder tier: paid path', () => {
     expect(t.backend.verify).not.toHaveBeenCalled();
   });
 
-  it('claimed wallet below tier (or RPC error) at payment time → 402, verify never called', async () => {
+  it('claimed wallet below tier at payment time → 402 without the word "balance"; RPC error → 503; verify never called', async () => {
     const t = await start({ [HOLDER]: MIN - 1n, [OTHER]: 'error' });
-    for (const w of [HOLDER, OTHER]) {
-      const res = await t.get({ 'x-pwire-holder': w, 'PAYMENT-SIGNATURE': payHeader(buildTx(memoFor(t.mint, w)), '5000') });
-      expect(res.status).toBe(402);
-    }
+    const below = await t.get({ 'x-pwire-holder': HOLDER, 'PAYMENT-SIGNATURE': payHeader(buildTx(memoFor(t.mint, HOLDER)), '5000') });
+    expect(below.status).toBe(402);
+    expect((await below.json()).message).not.toMatch(/balance|insufficient|not enough/i);
+    const down = await t.get({ 'x-pwire-holder': OTHER, 'PAYMENT-SIGNATURE': payHeader(buildTx(memoFor(t.mint, OTHER)), '5000') });
+    expect(down.status).toBe(503);
+    expect((await down.json()).error).toBe('HOLDER_CHECK_UNAVAILABLE');
     expect(t.backend.verify).not.toHaveBeenCalled();
+    const stats = await (await fetch(`${t.base}/v1/stats`)).json();
+    expect(stats.holder_tier).toMatchObject({ on: true, mint: PWIRE, min_balance: MIN.toString(), errors: 1 });
+    expect(stats.holder_tier.last_error).toBe('rpc down');
+  });
+
+  it('retry of a claimed holder payment whose settle failed skips the tier read but keeps the payer check', async () => {
+    const balances: Record<string, bigint | 'error'> = { [HOLDER]: MIN };
+    const t = await start(balances);
+    t.backend.settle.mockRejectedValueOnce(new Error('timeout'));
+    const hdr = { 'x-pwire-holder': HOLDER, 'PAYMENT-SIGNATURE': payHeader(buildTx(memoFor(t.mint, HOLDER)), '5000') };
+    expect((await t.get(hdr)).status).toBe(502);
+    balances[HOLDER] = 'error'; // cache still warm, but prove the retry would not need a read
+    t.read.mockClear();
+    expect((await t.get(hdr)).status).toBe(200);
+    expect(t.read).not.toHaveBeenCalled();
   });
 
   it('a holder may still pay full price with the full-price memo', async () => {
@@ -160,18 +178,41 @@ describe('holder tier: paid path', () => {
 });
 
 describe('holderCheck', () => {
-  it('caches successful reads for HOLDER_CACHE_S, never caches failures', async () => {
+  it('caches successful reads for HOLDER_CACHE_S, never caches failures, counts errors', async () => {
     let now = 1000;
     let fail = true;
     const read = vi.fn(async () => { if (fail) throw new Error('x'); return MIN; });
-    const check = holderCheck(read, PWIRE, MIN, () => now);
-    expect(await check(HOLDER)).toBe(false);
+    const { check, stats } = holderCheck(read, PWIRE, MIN, () => now);
+    expect(await check(HOLDER)).toBe('unknown');
     fail = false;
-    expect(await check(HOLDER)).toBe(true);
-    expect(await check(HOLDER)).toBe(true);
+    expect(await check(HOLDER)).toBe('holder');
+    expect(await check(HOLDER)).toBe('holder');
     expect(read).toHaveBeenCalledTimes(2);
     now += HOLDER_CACHE_S;
-    expect(await check(HOLDER)).toBe(true);
+    expect(await check(HOLDER)).toBe('holder');
     expect(read).toHaveBeenCalledTimes(3);
+    expect(stats).toMatchObject({ checks: 3, errors: 1, last_error: 'x' });
+  });
+
+  it('a global lookup budget caps uncached RPC reads per minute (random headers cannot exhaust the RPC)', async () => {
+    const read = vi.fn(async () => 0n);
+    const { check, stats } = holderCheck(read, PWIRE, MIN, () => 5000);
+    for (let i = 0; i < HOLDER_LOOKUPS_PER_MIN; i++) expect(await check(rndKey())).toBe('not_holder');
+    expect(await check(rndKey())).toBe('unknown');
+    expect(read).toHaveBeenCalledTimes(HOLDER_LOOKUPS_PER_MIN);
+    expect(stats.throttled).toBe(1);
+  });
+});
+
+describe('config', () => {
+  const env = { PAYTO_ADDRESS: PAYTO, PUMPWIRE_DB_PATH: ':memory:' };
+  it('tier off by default; on with mint + RPC; fails fast on a bad mint or a missing RPC', () => {
+    expect(loadConfig(env).pwireMint).toBeNull();
+    const on = loadConfig({ ...env, PWIRE_MINT: PWIRE, SOLANA_RPC_URL: 'http://rpc.invalid' });
+    expect(on.pwireMint).toBe(PWIRE);
+    expect(on.pwireTierMinBalance).toBe(MIN);
+    expect(() => loadConfig({ ...env, PWIRE_MINT: 'not base58!', SOLANA_RPC_URL: 'http://rpc.invalid' })).toThrow(/PWIRE_MINT/);
+    expect(() => loadConfig({ ...env, PWIRE_MINT: PWIRE })).toThrow(/SOLANA_RPC_URL/);
+    expect(() => loadConfig({ ...env, PWIRE_TIER_MIN_BALANCE: '0' })).toThrow(/PWIRE_TIER_MIN_BALANCE/);
   });
 });

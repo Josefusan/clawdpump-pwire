@@ -101,6 +101,11 @@ export async function fetchRiskResult(deps: PayDeps, mint: string): Promise<unkn
   }
 
   if (res.status === 200) return res.json();
+  // Refused before settlement (bad mint, unknown mint, payment rejected, holder check unavailable): nothing was spent.
+  if ([400, 402, 404, 503].includes(res.status) && reserved > 0) {
+    spend.release(reserved);
+    reserved = 0;
+  }
   let body: { error?: string; message?: string } = {};
   try {
     body = (await res.json()) as typeof body;

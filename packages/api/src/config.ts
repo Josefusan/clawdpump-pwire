@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import { isBase58Pubkey } from './base58.js';
 
 /** Repo-root data/backtest.json regardless of the process cwd (pm2 runs the api with cwd=packages/api). */
 const DEFAULT_BACKTEST_JSON = fileURLToPath(new URL('../../../data/backtest.json', import.meta.url));
@@ -37,6 +38,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const dbPath = env.PUMPWIRE_DB_PATH;
   if (!payTo) throw new Error('PAYTO_ADDRESS is required');
   if (!dbPath) throw new Error('PUMPWIRE_DB_PATH is required');
+  const pwireMint = env.PWIRE_MINT?.trim() || null;
+  const solanaRpcUrl = env.SOLANA_RPC_URL?.trim() || null;
+  // Fail fast: a bad or unreadable tier config would otherwise mean "nobody is a holder" with no error.
+  if (pwireMint && !isBase58Pubkey(pwireMint)) throw new Error('PWIRE_MINT must be a base58 public key');
+  if (pwireMint && !solanaRpcUrl) throw new Error('PWIRE_MINT requires SOLANA_RPC_URL for holder balance reads');
   return {
     port: Number(env.PORT ?? 8080),
     dbPath,
@@ -48,9 +54,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     rateLimitPerMin: Number(env.RATE_LIMIT_PER_MIN ?? 60),
     firstPartyWallets: (env.FIRST_PARTY_WALLETS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
     backtestJsonPath: env.BACKTEST_JSON_PATH ?? DEFAULT_BACKTEST_JSON,
-    pwireMint: env.PWIRE_MINT?.trim() || null,
+    pwireMint,
     pwireTierMinBalance: tierMin(env.PWIRE_TIER_MIN_BALANCE),
-    solanaRpcUrl: env.SOLANA_RPC_URL?.trim() || null,
+    solanaRpcUrl,
   };
 }
 

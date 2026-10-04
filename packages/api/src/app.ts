@@ -13,7 +13,7 @@ import { livePublicDir } from '@pumpwire/live';
 import { base58Decode, isBase58Pubkey } from './base58.js';
 import { claimPayment, findOwnRow, markFailed, markServed, setTxSig } from './calls.js';
 import { HOLDER_PRICE_BASE_UNITS, PRICE_BASE_UNITS, type Config } from './config.js';
-import { holderCheck, type BalanceReader } from './holder.js';
+import { holderCheck, type BalanceReader, type HolderStatus } from './holder.js';
 import { cachedScore, dbScore, tokenExists, type ScoreFn } from './risk.js';
 import { buildStats } from './stats.js';
 import { hasExactlyMemo } from './tx.js';
@@ -81,9 +81,9 @@ export function createApp(deps: Deps) {
   let feePayer: string | undefined;
   // Holder tier: off unless both a mint and a balance reader exist. Fails closed (see holder.ts).
   const tierOn = cfg.pwireMint !== null && deps.holderBalance !== undefined;
-  const isHolder = tierOn
-    ? holderCheck(deps.holderBalance!, cfg.pwireMint!, cfg.pwireTierMinBalance, nowS)
-    : async () => false;
+  const holder$ = tierOn ? holderCheck(deps.holderBalance!, cfg.pwireMint!, cfg.pwireTierMinBalance, nowS) : null;
+  const holderStatus = async (wallet: string): Promise<HolderStatus> => (holder$ ? holder$.check(wallet) : 'not_holder');
+  let payerMissing = 0;
   const description = tierOn
     ? `${DESCRIPTION}. $0.01 USDC; wallets holding >= ${wholePwire(cfg.pwireTierMinBalance)} $PWIRE ` +
       `(${cfg.pwireMint}) pay $0.005: send header X-PWIRE-HOLDER: <wallet> and pay from that wallet.`
@@ -151,7 +151,10 @@ export function createApp(deps: Deps) {
 
   app.get('/v1/stats', (_req, res) => {
     try {
-      res.status(200).json(buildStats(db, cfg, nowS()));
+      const holder_tier = holder$
+        ? { on: true, mint: cfg.pwireMint, min_balance: cfg.pwireTierMinBalance.toString(), ...holder$.stats, payer_missing: payerMissing }
+        : { on: false };
+      res.status(200).json({ ...buildStats(db, cfg, nowS()), holder_tier });
     } catch {
       fail(res, 500, 'INTERNAL', 'stats unavailable');
     }
@@ -177,7 +180,7 @@ export function createApp(deps: Deps) {
     const holder = claimedHolder(req);
     if (!header) {
       // Discounted offer only when the claimed wallet currently holds the tier balance.
-      const offerHolder = holder !== null && (await isHolder(holder)) ? holder : null;
+      const offerHolder = holder !== null && (await holderStatus(holder)) === 'holder' ? holder : null;
       const body = paymentRequired(req, mint, fp, 'PAYMENT_REQUIRED', offerHolder);
       res.set('PAYMENT-REQUIRED', encodePaymentRequiredHeader(body));
       return res.status(402).json(body);
@@ -225,12 +228,24 @@ export function createApp(deps: Deps) {
     if (own && (own.status === 'served' || own.tx_sig !== null)) {
       payer = own.payer;
     } else {
-      // New discounted payment: the claimed wallet must hold the tier now (cached <= 60 s, fails closed).
-      if (discounted && !(await isHolder(holder))) return invalid('holder price requires the $PWIRE tier balance');
+      // New discounted payment: the claimed wallet must hold the tier now (cached <= 60 s, fails closed). A retry of a
+      // row we already claimed skips this (the tier was proven at first claim); the payer check below still runs.
+      // Messages avoid the word "balance": MCP clients map it to INSUFFICIENT_FUNDS.
+      if (discounted && !own) {
+        const st = await holderStatus(holder);
+        if (st === 'unknown') {
+          return fail(res, 503, 'HOLDER_CHECK_UNAVAILABLE', 'holder tier check unavailable; retry shortly, or pay full price without X-PWIRE-HOLDER');
+        }
+        if (st !== 'holder') return invalid('wallet is not in the $PWIRE holder tier; pay full price without X-PWIRE-HOLDER');
+      }
       try {
         const v = await backend.verify(payload, want);
         if (v.isValid !== true) return invalid(v.invalidReason ?? 'verification failed');
         payer = typeof v.payer === 'string' ? v.payer : null;
+        if (discounted && payer === null) {
+          payerMissing++;
+          console.warn('pumpwire-api holder_tier: facilitator verify returned no payer; discounted payment rejected');
+        }
         if (discounted && payer !== holder) return invalid('holder price must be paid from the X-PWIRE-HOLDER wallet');
       } catch {
         return fail(res, 502, 'UPSTREAM', 'payment verification unavailable');
