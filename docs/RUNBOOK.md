@@ -35,6 +35,26 @@ to `PAYTO_ADDRESS`'s ATA, token = mainnet USDC `EPjFWdd5…Dt1v`. Also check `ht
 **Rollback (one command)**: `scripts/cutover-mainnet.sh --rollback` — stops `pumpwire-api` (mainnet API off) and moves
 `pumpwire-ingest` back to the devnet definition. Logs: `pm2 logs pumpwire-api --lines 100 --nostream`.
 
+## Outcome labels & backtest (mainnet)
+
+`tokens.outcome` / `outcome_at` drive the `deployer_history` score factor and the `/live` "caught" board.
+`scripts/label-outcomes.mjs` writes them using the pure rules in `scripts/backtest.mjs`.
+
+**Restored 2026-10-04:** the PumpWire cron lines were missing and `mainnet.db` had **0** labels, so `caught`
+was always empty. Current crontab:
+
+- `0 * * * *` — `sqlite3 ~/pumpwire-data/mainnet.db ".backup ~/pumpwire-data/mainnet-snapshot.db"`
+- `17 * * * *` — `cd ~/pumpwire && /home/joseph/pumpwire-node/bin/node --experimental-sqlite scripts/label-outcomes.mjs --db ~/pumpwire-data/mainnet.db --min-age 7200 --limit 8000 >> ~/pumpwire-data/label-outcomes-mainnet.log`
+
+**Manual label run:** `ssh pw 'cd ~/pumpwire && PATH=~/pumpwire-node/bin:$PATH node --experimental-sqlite scripts/label-outcomes.mjs --db ~/pumpwire-data/mainnet.db --min-age 7200 --limit 8000'`
+
+**Backtest** (feeds `/v1/stats.backtest` from `~/pumpwire/data/backtest.json`; the API re-reads it by mtime, so no restart):
+`node --experimental-sqlite scripts/backtest.mjs --db ~/pumpwire-data/mainnet.db --out ~/pumpwire/data/backtest.json --min-age 7200`.
+This is **heavy**: it scores every launch and scans the 24 h trade window per token (~5k tokens × ~170k trades).
+Run it on a quiet box, not while other workloads saturate the host.
+
+**Check:** `curl -s localhost:<PORT>/v1/stats | python3 -m json.tool` → inspect `caught` and `backtest`.
+
 ## Trade source (T-028)
 
 Ingest's default source (`INGEST_TRADE_SOURCE=logs`) is pump.fun program events over Solana **mainnet** `logsSubscribe`: creates, trades and migrations are decoded from `Program data:` log lines with their exact slot, validated like any other untrusted input, with no API key and a single subscription. pump.fun exists only on mainnet, so the socket is chosen independently of the payment network: `SOLANA_WS_URL` if set, else Helius mainnet via `HELIUS_API_KEY`, else the public `wss://api.mainnet-beta.solana.com` (works, rate limited). Trades are stored only for mints created inside the last `INGEST_TRADE_WINDOW_MIN` minutes, at most `INGEST_MAX_TRACKED` of them. `INGEST_TRADE_SOURCE=pumpportal` restores the PumpPortal feed (its `subscribeTokenTrade` needs a funded PumpPortal key).
