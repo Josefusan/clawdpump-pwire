@@ -1,7 +1,7 @@
 # $PWIRE holder tier
 
-Status: **built in T-043, off until `PWIRE_MINT` is set on the API.** README and SUBMISSION say "live" only
-after the mainnet API runs with it.
+Status: **live on mainnet since 2026-10-04** (T-043). Verified from outside: a wallet holding ≥ 1M PWIRE gets
+the 5000-unit offer; other wallets and requests without the header get 10000.
 
 ## What it does
 

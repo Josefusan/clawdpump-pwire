@@ -24,6 +24,8 @@ Every call is risk information, not advice.
 - **Trades decoded straight from pump.fun program logs.** Ingest subscribes to the pump.fun program with
   `logsSubscribe` and decodes creates, trades and migrations from `Program data:` lines. No paid data
   feed, one subscription, exact slots.
+- **A token with a job.** Holding ≥ 1M $PWIRE in the paying wallet halves the price of every call. Bots get it with
+  no setup: `@pumpwire/mcp` asks for the holder price with its own wallet, and the 402 offer tells any agent how.
 - **Explainable by construction.** The scorer is a pure function (`score(snapshot)`): same input, byte-
   identical output. Every point comes with a factor name, a raw number, a threshold and the wallets or
   mints involved. Token metadata never reaches the output (unit test S18).
@@ -103,8 +105,10 @@ Nothing is paid without `--pay` or an explicit tool call, and never above the ca
   such everywhere. Third-party count is 0. We do not mix the two.
 - **No accuracy figure yet.** A backtest harness exists, but the labelled sample is small, so `/v1/stats`
   reports `backtest: null` until the sample is meaningful.
-- **Planned, not live:** $ANSEM as a payment asset, a $PWIRE holder tier, `deployer_history` and
-  `early_buyer_map` tools, deployer alerts.
+- **$PWIRE holder tier: live since 2026-10-04.** A wallet holding ≥ 1,000,000 $PWIRE pays $0.005 instead of $0.01 when
+  it sends `X-PWIRE-HOLDER: <wallet>` and pays from that wallet. Verified on mainnet: a 1M+ wallet gets the 5000-unit
+  offer, others get 10000 (`/v1/stats` → `holder_tier`, `paid_calls_holder`). Design: [HOLDER-TIER.md](./HOLDER-TIER.md).
+- **Planned, not live:** $ANSEM as a payment asset, `deployer_history` and `early_buyer_map` tools, deployer alerts.
 - **`@pumpwire/mcp` is not on npm.** Clone, build, and point your MCP client at `packages/mcp/dist/index.js`.
 
 ## 7. Compliance
@@ -114,7 +118,7 @@ Nothing is paid without `--pay` or an explicit tool call, and never above the ca
 - **No trading of $PWIRE by us or our agents.** No coordinated buys, no bots on our own token.
 - **Humans approve money and posts.** Agents sign only within hard caps; Scout drafts alerts and never
   posts; a human reviews every post.
-- **No investment language.** $PWIRE is intended as an access tier (planned, not live) — not a promise. Nothing here is a forecast.
+- **No investment language.** $PWIRE is an access tier (holders pay half per call) — not a promise. Nothing here is a forecast.
 - **Public data only; wallets, never people.** Reasons cite wallet addresses in short form (`7xQ…9f`)
   and public signatures. No doxxing, no accusations against any person.
 - **Risk information, not advice.** A score describes signals in public onchain data about wallets and

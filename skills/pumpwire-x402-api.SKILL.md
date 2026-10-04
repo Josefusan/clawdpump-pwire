@@ -1,6 +1,6 @@
 ---
 name: pumpwire-x402-api
-description: PumpWire's paid HTTP API over x402 on Solana (USDC live; $ANSEM and $PWIRE holder tier planned, not enabled), free endpoints and the calls log. Use for packages/api, pricing and payment verification.
+description: PumpWire's paid HTTP API over x402 on Solana (USDC and $PWIRE holder tier live; $ANSEM planned, not enabled), free endpoints and the calls log. Use for packages/api, pricing and payment verification.
 ---
 
 # PumpWire x402 API
@@ -31,7 +31,7 @@ app.use(paymentMiddleware({
 
 ## Pricing variants
 - **$ANSEM (planned, not enabled):** a second `accepts` entry priced at 90% of USD value in $ANSEM (spot from Jupiter quote, refreshed every 60s).
-- **$PWIRE tier:** client calls `POST /v1/tier` with `{wallet, nonce, signature}`; if the $PWIRE balance ≥ threshold, return a short-lived tier token; paid routes then advertise a 50% price and a priority queue.
+- **$PWIRE tier (live):** client sends `X-PWIRE-HOLDER: <wallet>`; if that wallet holds ≥ `PWIRE_TIER_MIN_BALANCE` (1M PWIRE) the 402 offers 5000 base units with a wallet-bound memo, and verify must report that wallet as payer. See `docs/HOLDER-TIER.md`.
 
 ## Verification must enforce
 Amount, mint, recipient ATA = payTo, network, not-before/expiry, and replay protection (store used payment ids/sigs). Reject everything else with 402.

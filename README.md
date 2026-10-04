@@ -8,7 +8,7 @@ PumpWire watches every **pump.fun** launch, bonding curve and dev wallet on Sola
 what it finds as **MCP tools**: rug-risk scores today; early-buyer cluster maps and repeat-deployer alerts are planned.
 
 Other agents pay **per call over [x402](https://x402.org)** in USDC, so every request is an onchain
-transaction. $ANSEM payment and a $PWIRE holder tier are planned (not live yet).
+transaction. **$PWIRE holder tier is live:** a wallet holding ≥ 1,000,000 $PWIRE pays half. $ANSEM payment is planned.
 
 **AnsemHack Clawrena** · Track: **ClawPump × pump.fun** (+ auto-entered for Overall Winner)
 
@@ -55,8 +55,10 @@ Paid MCP tools, priced per call and settled onchain over x402.
 ## How it gets paid (x402 on Solana)
 
 - **Rails:** x402 `exact` scheme on Solana (mainnet live; devnet for testing). $0.01 USDC per `rug_risk_score` call.
-- **USDC** is the only accepted asset today. **Planned:** $ANSEM at a 10% discount (Token-2022 rail not yet verified
-  with the facilitator) and a **$PWIRE holder tier** (discount + priority; payer signs a nonce, server checks balance).
+- **USDC** is the only accepted asset today. **Planned:** $ANSEM at a 10% discount.
+- **$PWIRE holder tier (live since 2026-10-04):** wallets holding ≥ 1,000,000 $PWIRE pay $0.005 instead of $0.01 ([docs/HOLDER-TIER.md](docs/HOLDER-TIER.md)). Send
+  `X-PWIRE-HOLDER: <wallet>` and pay from that wallet; `@pumpwire/mcp` does this automatically. The discount is bound to
+  that wallet (memo + payer check), so it cannot be borrowed by another wallet.
 - **Payee (`payTo`):** the PumpWire agent wallet. Keys live **only** in the VPS `.env`, never in this repo.
 
 ## Architecture
@@ -193,7 +195,7 @@ The `skills/` folder holds the operating playbooks for the PumpWire agent org, o
 | `clawrena-compliance` | hackathon rules + guardrails — **load in every agent** |
 | `pumpwire-ingest` | pump.fun launch/trade/wallet ingestion |
 | `pumpwire-rug-risk` | the scoring engine and its backtest |
-| `pumpwire-x402-api` | paid HTTP API, pricing, USDC (live); $ANSEM + $PWIRE tier planned, not enabled |
+| `pumpwire-x402-api` | paid HTTP API, pricing, USDC + $PWIRE holder tier (live); $ANSEM planned |
 | `pumpwire-mcp` | the MCP client other agents install (private; run from packages/mcp/dist/index.js) |
 | `pumpwire-scout` | our own buyer/alert agent on ClawPump: pays for scores, drafts alerts |
 | `build-in-public` | X posts, `/live` page, stream prep |
@@ -220,7 +222,8 @@ Clone them with `git submodule update --init --recursive`.
 | Thu Oct 1, 24:00 UTC−5 | Register + tokenize | ✅ Done |
 | Thu Oct 1 | MVP code-complete on devnet (ingest, scorer, x402 API, MCP, Scout, /live) | ✅ Done |
 | **Sat Oct 3, 11:59 PM CT** | **MVP LIVE on mainnet + first paid calls** | ✅ (Oct 1) |
-| Sun Oct 4 – Tue Oct 6 | Stretch: deployer history, $ANSEM + holder tier (planned, not enabled), alerts | ⏳ |
+| Sun Oct 4 | $PWIRE holder tier live on mainnet (≥ 1M PWIRE → 50% off) | ✅ |
+| Mon Oct 5 – Tue Oct 6 | Stretch: deployer history, $ANSEM payments, alerts | ⏳ |
 | Wed Oct 7 | Judging closes — everything live | ⏳ |
 | Thu Oct 8 | Winners announced | — |
 
