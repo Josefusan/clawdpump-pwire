@@ -27,8 +27,7 @@ Rules every script follows:
   (default `0.05`), the network and the USDC mint **before** anything is signed.
 - Use a dedicated hot wallet holding only a few USDC. Never point these at a main wallet.
 
-`PUMPWIRE_API_URL`: the devnet API currently runs on the team VPS and is not public yet. The public URL
-will be published in this README and on `/live` once it is. Mainnet cutover is pending.
+`PUMPWIRE_API_URL`: the public mainnet API is https://vision-involved-clips-winner.trycloudflare.com (live since 2026-10-01).
 
 Full walkthroughs: [`docs/USE-CASES.md`](../docs/USE-CASES.md). Hermes install kit: [`hermes/`](../hermes/README.md).
 

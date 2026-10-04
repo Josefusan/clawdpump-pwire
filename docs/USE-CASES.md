@@ -6,8 +6,8 @@ were produced by running the real `score()` on the score package's test fixtures
 (`packages/score/test/fixtures.ts`, cases S04-style and S06). They are **fixture data, not live results**,
 and the addresses in them are synthetic.
 
-> **Status today:** devnet API running on the team server, **not public yet**; mainnet cutover pending.
-> The MCP server works over stdio against the devnet API. PWIRE Scout runs on devnet and only **drafts**
+> **Status today:** the API is live on **Solana mainnet** at https://vision-involved-clips-winner.trycloudflare.com (since 2026-10-01).
+> The MCP server works over stdio against it. PWIRE Scout runs on mainnet and only **drafts**
 > alerts. Live scores currently top out around `MED` until wallet enrichment and outcome labels accumulate.
 > The backtest exists but its sample is small, so no precision figures are quoted here.
 
@@ -17,7 +17,7 @@ Common setup for every case (Node 22):
 git clone https://github.com/Josefusan/clawdpump-pwire.git && cd clawdpump-pwire
 npm ci
 npm run build -w @pumpwire/mcp
-export PUMPWIRE_API_URL="https://<pumpwire-api-host>"   # published in the README once the API is public
+export PUMPWIRE_API_URL="https://vision-involved-clips-winner.trycloudflare.com"   # public mainnet API
 ```
 
 Paying cases need a **dedicated** keypair file (`SOLANA_KEYPAIR_PATH`) holding a little USDC. Default caps:
@@ -92,9 +92,9 @@ private and unpublished, so point the client at the built entry point in your cl
       "command": "node",
       "args": ["/ABSOLUTE/PATH/TO/clawdpump-pwire/packages/mcp/dist/index.js"],
       "env": {
-        "PUMPWIRE_API_URL": "https://<pumpwire-api-host>",
+        "PUMPWIRE_API_URL": "https://vision-involved-clips-winner.trycloudflare.com",
         "SOLANA_KEYPAIR_PATH": "/ABSOLUTE/PATH/TO/pumpwire-agent.json",
-        "PUMPWIRE_NETWORK": "devnet",
+        "PUMPWIRE_NETWORK": "mainnet",
         "PUMPWIRE_MAX_PRICE_USD": "0.05",
         "PUMPWIRE_DAILY_CAP_USD": "1"
       }
@@ -108,9 +108,9 @@ CLI (flag syntax: verify with `claude mcp add --help` on your version):
 
 ```bash
 claude mcp add pumpwire \
-  -e PUMPWIRE_API_URL="https://<pumpwire-api-host>" \
+  -e PUMPWIRE_API_URL="https://vision-involved-clips-winner.trycloudflare.com" \
   -e SOLANA_KEYPAIR_PATH="/ABSOLUTE/PATH/TO/pumpwire-agent.json" \
-  -e PUMPWIRE_NETWORK=devnet \
+  -e PUMPWIRE_NETWORK=mainnet \
   -- node /ABSOLUTE/PATH/TO/clawdpump-pwire/packages/mcp/dist/index.js
 ```
 
@@ -175,7 +175,7 @@ the workspace (no new dependencies):
 
 ```bash
 node examples/x402-fetch.mjs <mint>                    # step 1 only: prints the 402 offer, signs nothing
-SOLANA_KEYPAIR_PATH=/ABSOLUTE/PATH/TO/pumpwire-agent.json PUMPWIRE_NETWORK=devnet \
+SOLANA_KEYPAIR_PATH=/ABSOLUTE/PATH/TO/pumpwire-agent.json PUMPWIRE_NETWORK=mainnet \
   node examples/x402-fetch.mjs <mint> --pay            # steps 1-3, $0.01 USDC
 ```
 

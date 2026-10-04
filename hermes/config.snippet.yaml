@@ -11,9 +11,9 @@ mcp_servers:
     command: "node"
     args: ["/ABSOLUTE/PATH/TO/clawdpump-pwire/packages/mcp/dist/index.js"]
     env:
-      PUMPWIRE_API_URL: "https://<pumpwire-api-host>"          # devnet API is not public yet; see hermes/README.md
+      PUMPWIRE_API_URL: "https://vision-involved-clips-winner.trycloudflare.com"
       SOLANA_KEYPAIR_PATH: "/ABSOLUTE/PATH/TO/pumpwire-agent.json"  # dedicated hot wallet, a few USDC only
-      PUMPWIRE_NETWORK: "devnet"                                # devnet | mainnet (mainnet cutover pending)
+      PUMPWIRE_NETWORK: "mainnet"                                # mainnet | devnet
       PUMPWIRE_MAX_PRICE_USD: "0.05"                            # refuse any single call priced above this
       PUMPWIRE_DAILY_CAP_USD: "1"                               # refuse once this much is spent per UTC day
       PUMPWIRE_SPEND_STATE_PATH: "/ABSOLUTE/PATH/TO/.pumpwire-mcp/spend.json"

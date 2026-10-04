@@ -4,8 +4,8 @@ Give a [Hermes](https://github.com/NousResearch/hermes-agent) (claw-agent) a pum
 pays for itself: $0.01 USDC per call over x402, from the agent's own wallet, with hard spend caps.
 Two pieces: an MCP server registration (the tool) and a skill (when and how to use it).
 
-> **Status:** the API runs on **devnet** on the team server and is **not public yet**; mainnet cutover is
-> pending. The MCP server works over stdio against the devnet API today. Scores currently top out around
+> **Status:** the API is live on **Solana mainnet** at https://vision-involved-clips-winner.trycloudflare.com (since 2026-10-01).
+> The MCP server works over stdio against it today. Scores currently top out around
 > `MED` while wallet enrichment and outcome labels accumulate.
 
 ## What you need
@@ -43,9 +43,9 @@ mcp_servers:
     command: "node"
     args: ["/ABSOLUTE/PATH/TO/clawdpump-pwire/packages/mcp/dist/index.js"]
     env:
-      PUMPWIRE_API_URL: "https://<pumpwire-api-host>"
+      PUMPWIRE_API_URL: "https://vision-involved-clips-winner.trycloudflare.com"
       SOLANA_KEYPAIR_PATH: "/ABSOLUTE/PATH/TO/pumpwire-agent.json"
-      PUMPWIRE_NETWORK: "devnet"
+      PUMPWIRE_NETWORK: "mainnet"
       PUMPWIRE_MAX_PRICE_USD: "0.05"
       PUMPWIRE_DAILY_CAP_USD: "1"
       PUMPWIRE_SPEND_STATE_PATH: "/ABSOLUTE/PATH/TO/.pumpwire-mcp/spend.json"
