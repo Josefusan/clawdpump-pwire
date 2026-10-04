@@ -60,7 +60,7 @@ start if `PWIRE_MINT` is not base58 or `SOLANA_RPC_URL` is missing.
 |---|---|---|
 | `PWIRE_MINT` | `2b2Tv315U1FUtYF9Y1H2b2qrCnL3tN5QPabScFPCw8vw` | Unset = tier off, behaviour identical to before T-043 |
 | `PWIRE_TIER_MIN_BALANCE` | `1000000000000` | Base units (6 decimals) = 1,000,000 PWIRE. Default if unset |
-| `SOLANA_RPC_URL` | mainnet RPC | Needed for balance reads; without it the tier stays off |
+| `SOLANA_RPC_URL` | mainnet RPC | Needed for balance reads; the API refuses to start with `PWIRE_MINT` set and no RPC |
 
 ## Code
 
