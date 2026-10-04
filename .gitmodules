@@ -10,3 +10,6 @@
 [submodule "integrations/john-peslar-ai-skills"]
 	path = integrations/john-peslar-ai-skills
 	url = https://github.com/Josefusan/john-peslar-ai-skills.git
+[submodule "integrations/simplified-technical-english"]
+	path = integrations/simplified-technical-english
+	url = https://github.com/0xpili/simplified-technical-english.git

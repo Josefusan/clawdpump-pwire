@@ -122,19 +122,21 @@ A backtest harness exists (`scripts/backtest.mjs`, labels DEAD_1H / DEV_DUMP / S
 │   │   └── AnsemHack-Clawrena-Hackathon-Info.md
 │   └── adr/                           # architecture decision records
 ├── packages/                          # ingest, score, api, mcp, live, scout
-├── skills/                            # 7 agent skills (see below)
+├── skills/                            # 8 agent skills (see below)
 │   ├── clawrena-compliance.SKILL.md
 │   ├── pumpwire-ingest.SKILL.md
 │   ├── pumpwire-rug-risk.SKILL.md
 │   ├── pumpwire-x402-api.SKILL.md
 │   ├── pumpwire-mcp.SKILL.md
 │   ├── pumpwire-scout.SKILL.md
-│   └── build-in-public.SKILL.md
-└── integrations/                      # third-party repos, vendored as git submodules
+│   ├── build-in-public.SKILL.md
+│   └── simplified-technical-english.SKILL.md   # wraps the integrations/ submodule
+└── integrations/                      # third-party repos, tracked as git submodules
     ├── lean-thinking/
     ├── skillbox/
     ├── skills/
-    └── john-peslar-ai-skills/
+    ├── john-peslar-ai-skills/
+    └── simplified-technical-english/
 ```
 
 ## Quickstart
@@ -195,6 +197,7 @@ The `skills/` folder holds the operating playbooks for the PumpWire agent org, o
 | `pumpwire-mcp` | the MCP client other agents install (private; run from packages/mcp/dist/index.js) |
 | `pumpwire-scout` | our own buyer/alert agent on ClawPump: pays for scores, drafts alerts |
 | `build-in-public` | X posts, `/live` page, stream prep |
+| `simplified-technical-english` | third-party (submodule): rewrite docs in ASD-STE100 Simplified Technical English |
 
 ## Integrated repos (submodules)
 
@@ -206,6 +209,7 @@ PumpWire stands on prior art and tooling. These are tracked as git submodules un
 | `integrations/skillbox` | [kitze/skillbox](https://github.com/kitze/skillbox) | skills packaging / distribution patterns |
 | `integrations/skills` | [typesafe-ai/skills](https://github.com/typesafe-ai/skills) | reference agent skills |
 | `integrations/john-peslar-ai-skills` | [Josefusan/john-peslar-ai-skills](https://github.com/Josefusan/john-peslar-ai-skills) | voice + GTM skill library |
+| `integrations/simplified-technical-english` | [0xpili/simplified-technical-english](https://github.com/0xpili/simplified-technical-english) | STE (ASD-STE100) writing rules + a check tool for docs |
 
 Clone them with `git submodule update --init --recursive`.
 
