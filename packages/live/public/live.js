@@ -129,6 +129,7 @@ export function buildViewModel(stats, now) {
       { label: 'paid calls', value: String(paid) },
       { label: 'USDC paid', value: fmtAmount(t.usdc_paid ?? '0', 'USDC') },
       { label: '$ANSEM paid', value: fmtAmount(t.ansem_paid ?? '0', 'ANSEM') },
+      { label: '$PWIRE holder calls', value: String(int(t.paid_calls_holder)) },
       { label: 'unique payers', value: String(int(t.unique_payers)) },
       { label: 'third-party wallets', value: String(int(t.unique_integrators)) },
     ],

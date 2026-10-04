@@ -149,6 +149,7 @@ describe('live package', () => {
       ['paid calls', '3'],
       ['USDC paid', '0.03 USDC'],
       ['$ANSEM paid', '0 ANSEM'],
+      ['$PWIRE holder calls', '0'],
       ['unique payers', '2'],
       ['third-party wallets', '1'],
     ]);

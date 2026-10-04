@@ -27,12 +27,14 @@ let signed = 0;
 let settled: string[] = [];
 let offer: { network: string; asset: string; amount: string };
 let failMessage: string | undefined;
+let holderHeaders: (string | string[] | undefined)[] = [];
 
 beforeEach(async () => {
   dir = mkdtempSync(join(tmpdir(), 'pwmcp-'));
   signed = 0;
   settled = [];
   failMessage = undefined;
+  holderHeaders = [];
   balance = 10_000_000n;
   offer = { network: DEVNET, asset: DEV_USDC, amount: '10000' };
   api = httpServer((req, res) => {
@@ -42,6 +44,7 @@ beforeEach(async () => {
     };
     if (!req.url?.startsWith('/v1/risk/')) return json(404, { error: 'NOT_FOUND' });
     const mint = req.url.slice('/v1/risk/'.length);
+    holderHeaders.push(req.headers['x-pwire-holder']);
     if (mint === UNKNOWN) return json(404, { error: 'NOT_FOUND' });
     const header = req.headers['payment-signature'];
     if (typeof header !== 'string') {
@@ -126,6 +129,12 @@ describe('pumpwire-mcp', () => {
     expect(signed).toBe(1);
     expect(settled).toHaveLength(1);
     expect(JSON.parse(readFileSync(join(dir, 'spend.json'), 'utf8')).spentMicro).toBe(10000);
+  });
+
+  it('asks for the $PWIRE holder price with the paying wallet, on the 402 request and the paid retry', async () => {
+    const client = await connect();
+    await call(client, MINT);
+    expect(holderHeaders).toEqual(['Payer11111111111111111111111111111111111111', 'Payer11111111111111111111111111111111111111']);
   });
 
   it('refuses price above cap without signing', async () => {

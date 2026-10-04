@@ -12,7 +12,8 @@ import type { PaymentPayload, PaymentRequired, PaymentRequirements } from '@x402
 import { livePublicDir } from '@pumpwire/live';
 import { base58Decode, isBase58Pubkey } from './base58.js';
 import { claimPayment, findOwnRow, markFailed, markServed, setTxSig } from './calls.js';
-import { PRICE_BASE_UNITS, type Config } from './config.js';
+import { HOLDER_PRICE_BASE_UNITS, PRICE_BASE_UNITS, type Config } from './config.js';
+import { holderCheck, type BalanceReader } from './holder.js';
 import { cachedScore, dbScore, tokenExists, type ScoreFn } from './risk.js';
 import { buildStats } from './stats.js';
 import { hasExactlyMemo } from './tx.js';
@@ -20,6 +21,8 @@ import type { ErrorCode, RiskResult } from './types.js';
 
 const TOOL = 'rug_risk_score';
 const DESCRIPTION = 'PumpWire rug-risk score for a pump.fun mint';
+/** Request header naming the wallet that claims the $PWIRE holder price (docs/HOLDER-TIER.md). */
+export const HOLDER_HEADER = 'x-pwire-holder';
 
 /** The subset of the facilitator client the API uses; tests inject a mock. */
 export type Backend = Pick<FacilitatorClient, 'verify' | 'settle' | 'getSupported'>;
@@ -30,6 +33,8 @@ export interface Deps {
   cfg: Config;
   score?: ScoreFn;
   nowS?: () => number;
+  /** $PWIRE balance reader; the holder tier is on only when this and cfg.pwireMint are both set. */
+  holderBalance?: BalanceReader;
 }
 
 /** A transaction signature: base58 that decodes to exactly 64 bytes. */
@@ -44,8 +49,11 @@ export function isTxSig(s: unknown): s is string {
  * (measured on devnet 2026-10-01: 44 bytes OK, 56 bytes FAIL). 29 bytes uses ~12k CU. Keep it ≤ MAX_MEMO_BYTES.
  */
 export const MAX_MEMO_BYTES = 32;
-export const memoFor = (mint: string): string =>
-  `pumpwire:${createHash('sha256').update(`${TOOL}:${mint}`).digest('hex').slice(0, 20)}`;
+export const memoFor = (mint: string, holder: string | null = null): string =>
+  `pumpwire:${createHash('sha256').update(holder ? `${TOOL}:${mint}:h:${holder}` : `${TOOL}:${mint}`).digest('hex').slice(0, 20)}`;
+
+/** Whole PWIRE for a base-unit amount (6 decimals), for human-readable text. */
+const wholePwire = (base: bigint): string => (base / 1_000_000n).toLocaleString('en-US');
 
 function fail(res: Response, status: number, error: ErrorCode, message: string) {
   return res.status(status).json({ error, message });
@@ -71,6 +79,21 @@ export function createApp(deps: Deps) {
   const nowS = deps.nowS ?? (() => Math.floor(Date.now() / 1000));
   const allow = rateLimiter(cfg.rateLimitPerMin, nowS);
   let feePayer: string | undefined;
+  // Holder tier: off unless both a mint and a balance reader exist. Fails closed (see holder.ts).
+  const tierOn = cfg.pwireMint !== null && deps.holderBalance !== undefined;
+  const isHolder = tierOn
+    ? holderCheck(deps.holderBalance!, cfg.pwireMint!, cfg.pwireTierMinBalance, nowS)
+    : async () => false;
+  const description = tierOn
+    ? `${DESCRIPTION}. $0.01 USDC; wallets holding >= ${wholePwire(cfg.pwireTierMinBalance)} $PWIRE ` +
+      `(${cfg.pwireMint}) pay $0.005: send header X-PWIRE-HOLDER: <wallet> and pay from that wallet.`
+    : DESCRIPTION;
+  /** The claimed holder wallet from the request header, or null if absent/invalid or the tier is off. */
+  const claimedHolder = (req: Request): string | null => {
+    if (!tierOn) return null;
+    const h = req.get(HOLDER_HEADER)?.trim();
+    return h && isBase58Pubkey(h) ? h : null;
+  };
 
   async function getFeePayer(): Promise<string> {
     if (feePayer) return feePayer;
@@ -81,27 +104,28 @@ export function createApp(deps: Deps) {
     return (feePayer = fp);
   }
 
-  const requirementsFor = (mint: string, fp: string): PaymentRequirements => ({
+  /** `holder` non-null = the discounted offer, bound to that wallet through the memo. */
+  const requirementsFor = (mint: string, fp: string, holder: string | null = null): PaymentRequirements => ({
     scheme: 'exact',
     network: cfg.network as PaymentRequirements['network'],
     asset: cfg.usdcMint,
-    amount: String(PRICE_BASE_UNITS),
+    amount: String(holder ? HOLDER_PRICE_BASE_UNITS : PRICE_BASE_UNITS),
     payTo: cfg.payTo,
     maxTimeoutSeconds: cfg.maxTimeoutS,
     // `memo` makes the x402 client emit exactly this Memo; we also check it ourselves (replay binding).
-    extra: { feePayer: fp, memo: memoFor(mint) },
+    extra: { feePayer: fp, memo: memoFor(mint, holder) },
   });
 
-  function paymentRequired(req: Request, mint: string, fp: string, error: string): PaymentRequired {
+  function paymentRequired(req: Request, mint: string, fp: string, error: string, holder: string | null): PaymentRequired {
     return {
       x402Version: 2,
       error,
       resource: {
         url: `${req.protocol}://${req.get('host') ?? 'localhost'}/v1/risk/${mint}`,
-        description: DESCRIPTION,
+        description,
         mimeType: 'application/json',
       },
-      accepts: [requirementsFor(mint, fp)],
+      accepts: [requirementsFor(mint, fp, holder)],
     };
   }
 
@@ -150,8 +174,11 @@ export function createApp(deps: Deps) {
 
     // 4: payment header
     const header = req.get('payment-signature') ?? req.get('x-payment');
+    const holder = claimedHolder(req);
     if (!header) {
-      const body = paymentRequired(req, mint, fp, 'PAYMENT_REQUIRED');
+      // Discounted offer only when the claimed wallet currently holds the tier balance.
+      const offerHolder = holder !== null && (await isHolder(holder)) ? holder : null;
+      const body = paymentRequired(req, mint, fp, 'PAYMENT_REQUIRED', offerHolder);
       res.set('PAYMENT-REQUIRED', encodePaymentRequiredHeader(body));
       return res.status(402).json(body);
     }
@@ -168,8 +195,11 @@ export function createApp(deps: Deps) {
       return invalid('malformed payment header');
     }
 
-    const want = requirementsFor(mint, fp);
     const got = payload.accepted;
+    // A payment at the holder price is only acceptable with a holder header; it is then bound to that wallet by the
+    // memo and the payer check below. Without the header, `want` is full price and the amount check rejects it.
+    const discounted = holder !== null && got?.amount === String(HOLDER_PRICE_BASE_UNITS);
+    const want = requirementsFor(mint, fp, discounted ? holder : null);
     if (
       !got || got.scheme !== want.scheme || got.network !== want.network || got.asset !== want.asset ||
       got.amount !== want.amount || got.payTo !== want.payTo
@@ -180,11 +210,12 @@ export function createApp(deps: Deps) {
     // Replay binding: exactly one Memo, byte-equal to this request. No row is claimed on mismatch.
     let bound: boolean;
     try {
-      bound = hasExactlyMemo(wire, memoFor(mint));
+      bound = hasExactlyMemo(wire, String(want.extra?.memo));
     } catch {
       return invalid('unparseable transaction');
     }
     if (!bound) return invalid('transaction memo does not match this request');
+    const amount = discounted ? HOLDER_PRICE_BASE_UNITS : PRICE_BASE_UNITS;
 
     // §7: a payment already served (or settled) for this same resource is never re-verified; the tx may
     // have landed or its blockhash expired, which would make verify fail for a legitimately paid call.
@@ -194,10 +225,13 @@ export function createApp(deps: Deps) {
     if (own && (own.status === 'served' || own.tx_sig !== null)) {
       payer = own.payer;
     } else {
+      // New discounted payment: the claimed wallet must hold the tier now (cached <= 60 s, fails closed).
+      if (discounted && !(await isHolder(holder))) return invalid('holder price requires the $PWIRE tier balance');
       try {
         const v = await backend.verify(payload, want);
         if (v.isValid !== true) return invalid(v.invalidReason ?? 'verification failed');
         payer = typeof v.payer === 'string' ? v.payer : null;
+        if (discounted && payer !== holder) return invalid('holder price must be paid from the X-PWIRE-HOLDER wallet');
       } catch {
         return fail(res, 502, 'UPSTREAM', 'payment verification unavailable');
       }
@@ -206,7 +240,7 @@ export function createApp(deps: Deps) {
     // Atomic claim keyed by sha256(tx bytes). Only one concurrent caller proceeds.
     const outcome = claimPayment(db, {
       ts: nowS(), tool: TOOL, arg: mint, payer, network: cfg.network, asset: cfg.usdcMint,
-      amount: PRICE_BASE_UNITS, paymentId,
+      amount, paymentId,
       firstParty: payer !== null && cfg.firstPartyWallets.includes(payer),
     });
     if (outcome.kind === 'replayed') return fail(res, 402, 'PAYMENT_REPLAYED', 'payment already used');

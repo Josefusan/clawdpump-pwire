@@ -20,6 +20,7 @@ function cfgWith(backtestJsonPath: string): Config {
     port: 0, dbPath: ':memory:', network: 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', facilitatorUrl: 'http://mock.invalid',
     payTo: '11111111111111111111111111111111', usdcMint: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU',
     maxTimeoutS: 60, rateLimitPerMin: 1000, firstPartyWallets: [], backtestJsonPath,
+    pwireMint: null, pwireTierMinBalance: 1_000_000_000_000n, solanaRpcUrl: null,
   };
 }
 

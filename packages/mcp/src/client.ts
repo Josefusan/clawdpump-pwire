@@ -90,7 +90,11 @@ export async function fetchRiskResult(deps: PayDeps, mint: string): Promise<unkn
   const pay = wrapFetchWithPayment(deps.fetchImpl ?? fetch, client);
   let res: Response;
   try {
-    res = await pay(`${cfg.apiUrl}/v1/risk/${mint}`, { headers: { accept: 'application/json' } });
+    // x-pwire-holder: ask for the $PWIRE holder price for the paying wallet. The API ignores it unless that wallet
+    // holds the tier balance, and then only accepts the discounted payment from that same wallet.
+    res = await pay(`${cfg.apiUrl}/v1/risk/${mint}`, {
+      headers: { accept: 'application/json', 'x-pwire-holder': deps.payer },
+    });
   } catch (e) {
     if (policyError) throw policyError;
     throw mapFailure(e instanceof Error ? e.message : '');

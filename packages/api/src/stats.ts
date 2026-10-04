@@ -1,6 +1,6 @@
 import { readFileSync, statSync } from 'node:fs';
 import type { DatabaseSync } from 'node:sqlite';
-import type { Config } from './config.js';
+import { HOLDER_PRICE_BASE_UNITS, type Config } from './config.js';
 import { MODEL_VERSION } from '@pumpwire/score';
 
 const SERVED = "status = 'served' AND tx_sig IS NOT NULL";
@@ -63,6 +63,8 @@ export function buildStats(db: DatabaseSync, cfg: Config, nowS: number) {
   const usdcUnits = n(`SELECT SUM(amount) AS v FROM calls WHERE ${SERVED} AND asset = ?`, cfg.usdcMint);
   // A null payer (facilitator returned none) is never counted as third-party: it is reported as unattributed.
   const unattributed = n(`SELECT COUNT(*) AS v FROM calls WHERE ${SERVED} AND payer IS NULL AND first_party = 0`);
+  // Holder-tier calls are the ones settled at the holder price (no extra column needed).
+  const holderCalls = n(`SELECT COUNT(*) AS v FROM calls WHERE ${SERVED} AND amount = ?`, HOLDER_PRICE_BASE_UNITS);
   const payers = n(`SELECT COUNT(DISTINCT payer) AS v FROM calls WHERE ${SERVED}`);
   // "integrators" = distinct third-party paying wallets (INTERFACES §4.3). A wallet is not a verified builder.
   const integrators = n(`SELECT COUNT(DISTINCT payer) AS v FROM calls WHERE ${SERVED} AND NOT ${FP}`, ...fpWallets);
@@ -99,6 +101,7 @@ export function buildStats(db: DatabaseSync, cfg: Config, nowS: number) {
       paid_calls_first_party: fp,
       paid_calls_third_party: paid - fp - unattributed,
       paid_calls_unattributed: unattributed,
+      paid_calls_holder: holderCalls,
       usdc_paid: usdc(usdcUnits),
       ansem_paid: '0.000000',
       unique_payers: payers,

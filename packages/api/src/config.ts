@@ -15,6 +15,12 @@ export interface Config {
   firstPartyWallets: string[];
   /** JSON written by scripts/backtest.mjs; served as /v1/stats.backtest (null when missing). */
   backtestJsonPath: string;
+  /** $PWIRE holder tier (docs/HOLDER-TIER.md). Off when unset. */
+  pwireMint: string | null;
+  /** Minimum $PWIRE balance in base units (6 decimals) for the holder price. */
+  pwireTierMinBalance: bigint;
+  /** RPC used for holder balance reads. */
+  solanaRpcUrl: string | null;
 }
 
 // Devnet defaults (verified 2026-09-30). Mainnet must be set explicitly via env.
@@ -23,6 +29,8 @@ const DEVNET_USDC = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
 const DEVNET_FACILITATOR = 'https://x402.org/facilitator';
 
 export const PRICE_BASE_UNITS = 10000; // $0.01 in USDC base units (6 decimals)
+export const HOLDER_PRICE_BASE_UNITS = 5000; // $0.005: 50% off for wallets in the $PWIRE holder tier
+const DEFAULT_TIER_MIN = 1_000_000_000_000n; // 1,000,000 PWIRE (0.1% of supply) in base units
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const payTo = env.PAYTO_ADDRESS;
@@ -40,5 +48,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     rateLimitPerMin: Number(env.RATE_LIMIT_PER_MIN ?? 60),
     firstPartyWallets: (env.FIRST_PARTY_WALLETS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
     backtestJsonPath: env.BACKTEST_JSON_PATH ?? DEFAULT_BACKTEST_JSON,
+    pwireMint: env.PWIRE_MINT?.trim() || null,
+    pwireTierMinBalance: tierMin(env.PWIRE_TIER_MIN_BALANCE),
+    solanaRpcUrl: env.SOLANA_RPC_URL?.trim() || null,
   };
+}
+
+function tierMin(v: string | undefined): bigint {
+  if (v === undefined || v.trim() === '') return DEFAULT_TIER_MIN;
+  if (!/^[0-9]{1,30}$/.test(v.trim()) || BigInt(v.trim()) === 0n) throw new Error('PWIRE_TIER_MIN_BALANCE must be a positive integer (base units)');
+  return BigInt(v.trim());
 }
