@@ -64,6 +64,17 @@ export function fmtAmount(decimal, symbol) {
   return `${n.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${symbol}`;
 }
 
+/** "scored 4m before" — the time between the score and the outcome label; '—' when unknown. */
+export function fmtLead(scoredAt, outcomeAt) {
+  const a = Number(scoredAt);
+  const b = Number(outcomeAt);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || a <= 0 || b <= a) return '—';
+  const d = b - a;
+  if (d < 60) return `${d}s before`;
+  if (d < 3600) return `${Math.floor(d / 60)}m before`;
+  return `${Math.floor(d / 3600)}h before`;
+}
+
 export function fmtPct(x) {
   return Number.isFinite(x) ? `${(x * 100).toFixed(0)}%` : '—';
 }
@@ -167,7 +178,14 @@ export function buildViewModel(stats, now) {
           latency: c.latency_ms === null || c.latency_ms === undefined ? '—' : `${int(c.latency_ms)} ms`,
         };
       }),
+    // "Caught" means scored before the outcome. A row scored at or after its outcome label is not shown.
     caught: rows(s.caught)
+      .filter((row) => {
+        const c = obj(row) ?? {};
+        const a = num(c.scored_at, NaN);
+        const b = num(c.outcome_at, NaN);
+        return !(Number.isFinite(a) && Number.isFinite(b) && a >= b);
+      })
       .slice(0, 50)
       .map((row) => {
         const c = obj(row) ?? {};
@@ -184,6 +202,7 @@ export function buildViewModel(stats, now) {
           scoredAgo: fmtAgo(c.scored_at, now),
           outcome: safeText(c.outcome, 16) || '—',
           outcomeAgo: fmtAgo(c.outcome_at, now),
+          lead: fmtLead(c.scored_at, c.outcome_at),
         };
       }),
     backtest: backtest
@@ -287,6 +306,7 @@ function caughtCard(c) {
   row(dl, 'outcome', c.outcome);
   row(dl, 'scored', c.scoredAgo);
   row(dl, 'labelled', c.outcomeAgo);
+  row(dl, 'lead time', c.lead);
   li.append(dl);
 
   const links = el('div', null, { class: 'links' });
@@ -324,6 +344,17 @@ export function render(root, stats, now) {
   );
   replace(q('[data-calls]'), vm.calls.length ? vm.calls.map(callCard) : [emptyItem('No paid calls yet.')]);
   replace(q('[data-caught]'), vm.caught.length ? vm.caught.map(caughtCard) : [emptyItem('Nothing caught yet.')]);
+
+  // first-party / third-party bar (widths only; no text from the payload reaches an attribute)
+  const paid = vm.split.firstParty + vm.split.thirdParty + vm.split.unattributed;
+  const pct = (n) => (paid > 0 ? `${((n / paid) * 100).toFixed(1)}%` : '0');
+  const bar = (sel, n) => {
+    const host = q(sel);
+    if (host && typeof host.setAttribute === 'function') host.setAttribute('style', `width:${pct(n)}`);
+  };
+  bar('[data-bar-fp]', vm.split.firstParty);
+  bar('[data-bar-tp]', vm.split.thirdParty);
+  set('[data-holder-calls]', vm.counters[3].value);
   return vm;
 }
 
@@ -334,8 +365,13 @@ export async function main(root = document, fetchImpl = fetch, intervalMs = 1500
     try {
       const res = await fetchImpl(STATS_URL, { headers: { accept: 'application/json' }, cache: 'no-store' });
       if (!res.ok) throw new Error(`stats ${res.status}`);
-      render(root, await res.json());
+      const stats = await res.json();
+      render(root, stats);
       if (errorHost) errorHost.textContent = '';
+      // The Try it box and the hero terminal (try.js) reuse this poll instead of fetching again.
+      if (typeof window !== 'undefined' && typeof CustomEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('pumpwire:stats', { detail: stats }));
+      }
     } catch (err) {
       if (errorHost) errorHost.textContent = `stats unavailable — retrying (${safeText(err && err.message, 64)})`;
     }

@@ -3,102 +3,373 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PumpWire · live paid calls</title>
-<meta name="description" content="PumpWire sells pump.fun rug-risk scores to agents per call over x402. Every paid call is a settled Solana transaction. This page shows them live.">
+<title>PumpWire · rug-risk scores for AI agents</title>
+<meta name="description" content="PumpWire sells pump.fun rug-risk scores to AI agents and people for $0.01 USDC per call over x402 on Solana. No API key. Every paid call is a settled Solana transaction, shown live.">
 <meta name="color-scheme" content="dark">
+<meta property="og:title" content="PumpWire · rug-risk scores for AI agents">
+<meta property="og:description" content="1 cent per call over x402 on Solana. No API key. Every call is a settled transaction.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2307090c'/%3E%3Cpath d='M6 18h5l3-8 4 14 3-6h5' fill='none' stroke='%233ef0a1' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root {
-    --bg: #0b0d10; --card: #14181d; --line: #262e37; --fg: #e8edf2;
-    --muted: #8b97a5; --ok: #39d98a; --warn: #ffb020; --bad: #ff5c5c; --link: #7cc4ff;
+    --bg: #07090c; --bg2: #0a0d12; --card: #0f1318; --card2: #131820; --line: #1d242d; --line2: #2a333e;
+    --fg: #eaf0f5; --muted: #8592a0; --dim: #5d6875;
+    --ok: #3ef0a1; --ok-bg: rgba(62, 240, 161, .08); --warn: #ffb547; --bad: #ff4d5e; --link: #7cc4ff; --violet: #a78bfa;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --radius: 14px;
   }
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+  html { -webkit-text-size-adjust: 100%; overflow-x: hidden; scroll-behavior: smooth; }
   body {
     margin: 0; max-width: 100%; overflow-x: hidden;
     background: var(--bg); color: var(--fg);
-    font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font: 16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     overflow-wrap: break-word;
   }
-  main { max-width: 760px; margin: 0 auto; padding: 16px 16px 32px; }
-  h1 { font-size: 21px; line-height: 1.25; margin: 0 0 4px; }
-  h1 span { color: var(--muted); font-weight: 400; }
-  h2 { font-size: 13px; margin: 24px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-  p { margin: 8px 0; }
-  code { font-size: .92em; }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(60% 40% at 15% -5%, rgba(62, 240, 161, .10), transparent 70%),
+      radial-gradient(50% 35% at 100% 0%, rgba(124, 196, 255, .08), transparent 70%);
+  }
+  a { color: var(--link); }
+  code, .mono { font-family: var(--mono); font-size: .9em; }
+  main { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 0 16px 40px; }
+
+  /* nav */
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; letter-spacing: -.01em; color: var(--fg); text-decoration: none; }
+  .brand .mark { width: 30px; height: 30px; border-radius: 8px; background: var(--ok-bg); border: 1px solid rgba(62, 240, 161, .35); display: grid; place-items: center; color: var(--ok); font-family: var(--mono); font-size: 14px; }
+  .chip { font-family: var(--mono); font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line2); color: var(--muted); }
+  .chip.ok { color: var(--ok); border-color: rgba(62, 240, 161, .35); background: var(--ok-bg); }
+  .navlinks { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .navlinks a { color: var(--muted); text-decoration: none; font-size: 14px; padding: 10px; min-height: 44px; display: inline-flex; align-items: center; border-radius: 10px; }
+  .navlinks a:hover { color: var(--fg); background: var(--card); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(62, 240, 161, .6); animation: pulse 2s infinite; display: inline-block; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(62, 240, 161, .55); } 70% { box-shadow: 0 0 0 8px rgba(62, 240, 161, 0); } 100% { box-shadow: 0 0 0 0 rgba(62, 240, 161, 0); } }
+
+  /* hero */
+  .hero { display: grid; grid-template-columns: 1fr; gap: 28px; padding: 28px 0 12px; align-items: center; }
+  .eyebrow { display: inline-flex; gap: 8px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--ok); letter-spacing: .04em; text-transform: uppercase; }
+  .hero h1 { font-size: clamp(34px, 6.4vw, 58px); line-height: 1.04; letter-spacing: -.035em; margin: 14px 0 14px; font-weight: 800; }
+  .hero h1 .hl { background: linear-gradient(90deg, var(--ok), #8ff7cb 60%, var(--link)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero .sub { color: var(--muted); font-size: 18px; max-width: 34em; margin: 0 0 22px; }
+  .hero .sub strong { color: var(--fg); font-weight: 600; }
+  .ctas { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 11px 18px;
+    border-radius: 12px; border: 1px solid var(--line2); background: var(--card); color: var(--fg);
+    font: 600 15px/1.2 Inter, system-ui, sans-serif; text-decoration: none; cursor: pointer;
+  }
+  .btn:hover { border-color: #3a4552; background: var(--card2); }
+  .btn.primary { background: var(--ok); color: #04150d; border-color: var(--ok); }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn[disabled] { opacity: .5; cursor: not-allowed; }
+  .trust { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 18px; color: var(--dim); font-size: 13px; }
+  .trust span::before { content: "✓ "; color: var(--ok); }
+
+  /* terminal */
+  .term { background: #05070a; border: 1px solid var(--line2); border-radius: var(--radius); overflow: hidden; box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .8), 0 0 0 1px rgba(62, 240, 161, .04); }
+  .term-bar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; border-bottom: 1px solid var(--line); background: #0a0d11; }
+  .term-bar i { width: 11px; height: 11px; border-radius: 50%; background: #2a313a; display: inline-block; }
+  .term-bar .t { margin-left: 8px; font-family: var(--mono); font-size: 12px; color: var(--dim); }
+  .term-body { font-family: var(--mono); font-size: 13px; line-height: 1.75; padding: 16px; min-height: 290px; }
+  .term-body p { margin: 0; }
+  .term-body .c { color: var(--dim); }
+  .term-body .p { color: var(--ok); }
+  .term-body .y { color: var(--warn); }
+  .term-body .r { color: var(--bad); }
+  .term-body .b { color: var(--link); }
+  .term-body .v { color: var(--violet); }
+  .cursor { display: inline-block; width: 8px; height: 15px; background: var(--ok); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* sections */
+  section { margin-top: 56px; }
+  .sec-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  h2 { font-size: clamp(22px, 3.4vw, 30px); letter-spacing: -.02em; margin: 0; line-height: 1.15; }
+  .kicker { font-family: var(--mono); font-size: 12px; color: var(--ok); text-transform: uppercase; letter-spacing: .06em; margin: 0 0 6px; }
   .meta, .lede, .note, footer { color: var(--muted); font-size: 13px; }
   .meta strong { color: var(--fg); font-weight: 500; }
-  .error { color: var(--warn); font-size: 13px; min-height: 1.25em; }
+  .error { color: var(--warn); font-size: 13px; min-height: 1.25em; margin: 8px 0 0; }
+
+  /* counters */
   .counters { display: grid; grid-template-columns: 1fr; gap: 10px; }
-  .counter { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
-  .counter .value { font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; }
-  .counter .label { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .counter { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; position: relative; overflow: hidden; }
+  .counter .value { font-size: 30px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .counter .label { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .counter:first-child .value { color: var(--ok); }
+  .splitbar { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; display: flex; margin: 14px 0 8px; }
+  .splitbar .fp { background: var(--link); }
+  .splitbar .tp { background: var(--ok); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+
+  /* how it works */
+  .steps { display: grid; grid-template-columns: 1fr; gap: 10px; counter-reset: s; }
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+  .step .n { font-family: var(--mono); color: var(--ok); font-size: 12px; }
+  .step h3 { margin: 6px 0 6px; font-size: 17px; letter-spacing: -.01em; }
+  .step p { margin: 0; color: var(--muted); font-size: 14px; }
+  .step code { color: var(--fg); background: #0a0d11; border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; }
+
+  /* try it */
+  .try { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+  .panel.glow { border-color: rgba(62, 240, 161, .3); box-shadow: 0 0 0 1px rgba(62, 240, 161, .06), 0 20px 60px -30px rgba(62, 240, 161, .25); }
+  label.field { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .inrow { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  input.mint {
+    width: 100%; min-height: 48px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line2);
+    background: #07090c; color: var(--fg); font: 14px var(--mono); outline: none;
+  }
+  input.mint:focus { border-color: var(--ok); box-shadow: 0 0 0 3px rgba(62, 240, 161, .15); }
+  .recent { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .recent button { font: 12px var(--mono); color: var(--muted); background: #0a0d11; border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; min-height: 32px; cursor: pointer; }
+  .recent button:hover { color: var(--fg); border-color: var(--line2); }
+  .wallets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .wallets img { width: 20px; height: 20px; border-radius: 5px; }
+  .progress { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 6px; }
+  .progress li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--dim); }
+  .progress li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--line2); flex: 0 0 auto; }
+  .progress li.on { color: var(--fg); }
+  .progress li.on::before { border-color: var(--warn); background: var(--warn); animation: pulse 1.4s infinite; }
+  .progress li.done { color: var(--muted); }
+  .progress li.done::before { border-color: var(--ok); background: var(--ok); animation: none; }
+  .tmsg { min-height: 1.4em; font-size: 14px; margin: 12px 0 0; color: var(--muted); }
+  .tmsg.bad { color: var(--bad); }
+  .tmsg.good { color: var(--ok); }
+  .result { display: none; margin-top: 4px; }
+  .result.show { display: block; }
+  .gauge { display: flex; align-items: center; gap: 16px; }
+  .gauge .big { font-size: 56px; font-weight: 800; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .meter { height: 10px; border-radius: 999px; background: linear-gradient(90deg, var(--ok), var(--warn) 50%, var(--bad)); position: relative; margin: 16px 0 6px; }
+  .meter i { position: absolute; top: -5px; width: 4px; height: 20px; border-radius: 2px; background: var(--fg); box-shadow: 0 0 0 3px var(--bg); transition: left .8s cubic-bezier(.2, .8, .2, 1); }
+  .scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); font-family: var(--mono); }
+  .reasons { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 8px; }
+  .reasons li { background: #0a0d11; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 14px; display: flex; gap: 10px; }
+  .reasons .pts { font-family: var(--mono); color: var(--warn); flex: 0 0 auto; }
+  .price { display: flex; align-items: baseline; gap: 8px; }
+  .price .amt { font-size: 28px; font-weight: 750; letter-spacing: -.02em; }
+
+  /* calls */
   .calls { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 10px; }
-  .call { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .call { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
   .call-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
-  .badge { font-weight: 600; font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg); }
-  .v-low { color: var(--ok); border-color: #1e4a37; }
-  .v-med { color: var(--warn); border-color: #4a3a17; }
-  .v-high, .v-extreme { color: var(--bad); border-color: #4d2323; }
+  .badge { font-family: var(--mono); font-weight: 600; font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line2); color: var(--fg); }
+  .v-low { color: var(--ok); border-color: rgba(62, 240, 161, .35); background: var(--ok-bg); }
+  .v-med { color: var(--warn); border-color: rgba(255, 181, 71, .35); background: rgba(255, 181, 71, .07); }
+  .v-high, .v-extreme { color: var(--bad); border-color: rgba(255, 77, 94, .4); background: rgba(255, 77, 94, .08); }
   .v-none { color: var(--muted); }
   .party { border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
   .token { font-size: 15px; font-weight: 600; margin: 8px 0 0; }
-  .token .sym { color: var(--muted); font-weight: 400; }
-  .kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; margin: 8px 0 0; font-size: 13px; }
-  .kv dt { color: var(--muted); }
-  .kv dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .token .sym { color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; margin: 10px 0 0; font-size: 13px; }
+  .kv dt { color: var(--dim); }
+  .kv dd { margin: 0; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 12.5px; }
   .links { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
   .links a, .links .unlinked {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
     min-height: 44px; padding: 10px 14px; border-radius: 10px;
-    background: #1a2027; border: 1px solid var(--line); color: var(--link);
-    font-size: 14px; text-decoration: none;
+    background: #0a0d11; border: 1px solid var(--line); color: var(--link);
+    font-size: 13px; text-decoration: none; font-family: var(--mono);
   }
-  .links a:active { background: #222a33; }
+  .links a:hover { border-color: var(--line2); background: var(--card2); }
   .links .unlinked { color: var(--muted); }
   .links .arrow { color: var(--muted); }
   .empty { color: var(--muted); font-size: 13px; }
   .backtest { font-size: 14px; }
-  footer { margin: 28px 0 0; font-size: 12px; }
+  .scroll { max-height: 760px; overflow-y: auto; padding-right: 2px; }
+
+  /* agents */
+  .two { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  pre.code { margin: 10px 0 0; background: #05070a; border: 1px solid var(--line); border-radius: 12px; padding: 14px; font: 12.5px/1.6 var(--mono); color: #cfe3f5; overflow-x: auto; white-space: pre; max-width: 100%; }
+  pre.code .k { color: var(--ok); }
+  pre.code .s { color: var(--warn); }
+  .holder { background: linear-gradient(135deg, rgba(167, 139, 250, .10), rgba(62, 240, 161, .06)); border: 1px solid rgba(167, 139, 250, .3); }
+  .holder .amt { color: var(--violet); }
+  footer { margin: 56px 0 0; padding-top: 20px; border-top: 1px solid var(--line); font-size: 12px; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; }
+
   @media (min-width: 520px) {
     .counters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .links { grid-template-columns: 1fr 1fr; }
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .inrow { grid-template-columns: minmax(0, 1fr) auto; }
   }
+  @media (min-width: 900px) {
+    .hero { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); padding-top: 48px; }
+    .counters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .try { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+    .two { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+    .calls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 </style>
 </head>
 <body>
 <main data-live-root>
-  <header>
-    <h1>PumpWire <span>live paid calls</span></h1>
-    <p class="meta">network <strong data-network>—</strong> · model <strong data-model>—</strong> · updated <span data-updated>—</span></p>
+  <nav class="nav">
+    <a class="brand" href="/live/"><span class="mark">⌁</span>PumpWire <span class="chip">$PWIRE</span></a>
+    <div class="navlinks">
+      <a href="#how">How it works</a>
+      <a href="#try">Try it</a>
+      <a href="#live">Live calls</a>
+      <a href="#agents">For agents</a>
+      <span class="chip ok"><span class="dot"></span> <span data-network>—</span></span>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <span class="eyebrow">x402 · Solana · pump.fun</span>
+      <h1>Rug-risk scores that <span class="hl">AI agents pay for</span> themselves.</h1>
+      <p class="sub">An agent asks about a new pump.fun token, gets <strong>HTTP 402</strong>, pays <strong>$0.01 USDC</strong> from its own wallet and receives an explainable score in about two seconds. No API key, no signup, no subscription.</p>
+      <div class="ctas">
+        <a class="btn primary" href="#try">Try it for $0.01</a>
+        <a class="btn" href="#agents">Add to your agent</a>
+      </div>
+      <div class="trust"><span>Settled on Solana mainnet</span><span>Every call has a Solscan tx</span><span>Our own calls are labelled</span></div>
+    </div>
+    <div class="term" aria-label="An AI agent paying PumpWire over x402">
+      <div class="term-bar"><i></i><i></i><i></i><span class="t">agent ~ pumpwire</span></div>
+      <div class="term-body" data-term></div>
+    </div>
   </header>
-  <p class="lede">Agents pay PumpWire $0.01 USDC per <code>rug_risk_score(mint)</code> over x402 on Solana. Every call below is a settled transaction.</p>
+
   <p class="error" data-error role="status" aria-live="polite"></p>
 
   <section aria-labelledby="totals-h">
-    <h2 id="totals-h">Totals</h2>
+    <div class="sec-head">
+      <div>
+        <p class="kicker">Live from mainnet</p>
+        <h2 id="totals-h">Totals</h2>
+      </div>
+      <p class="meta">model <strong data-model>—</strong> · updated <span data-updated>—</span></p>
+    </div>
     <div class="counters" data-counters></div>
+    <div class="splitbar" aria-hidden="true"><div class="fp" data-bar-fp style="width:0"></div><div class="tp" data-bar-tp style="width:0"></div></div>
+    <div class="legend"><span><i style="background:var(--link)"></i>first-party (our Scout agent)</span><span><i style="background:var(--ok)"></i>third-party wallets</span></div>
     <p class="note" data-split>—</p>
   </section>
 
-  <section aria-labelledby="calls-h">
-    <h2 id="calls-h">Last 50 calls</h2>
-    <ul class="calls" data-calls></ul>
+  <section id="how" aria-labelledby="how-h">
+    <p class="kicker">How it works</p>
+    <h2 id="how-h">One HTTP call. One cent. One settled transaction.</h2>
+    <div class="steps" style="margin-top:16px">
+      <div class="step"><span class="n">01 · ASK</span><h3>Agent requests a score</h3><p><code>GET /v1/risk/&lt;mint&gt;</code> for any pump.fun launch PumpWire has seen.</p></div>
+      <div class="step"><span class="n">02 · 402</span><h3>PumpWire names the price</h3><p>HTTP 402 with an x402 offer: $0.01 USDC on Solana ($0.005 for $PWIRE holders).</p></div>
+      <div class="step"><span class="n">03 · PAY</span><h3>Agent signs from its wallet</h3><p>A USDC transfer bound to this exact request by a memo. The facilitator pays the SOL fee.</p></div>
+      <div class="step"><span class="n">04 · SCORE</span><h3>Score + reasons, settled</h3><p>0–100, LOW to EXTREME, with the evidence: deployer history, bundles, holder concentration.</p></div>
+    </div>
+  </section>
+
+  <section id="try" aria-labelledby="try-h">
+    <p class="kicker">Try it yourself</p>
+    <h2 id="try-h">Pay one cent from your wallet, get a score.</h2>
+    <p class="lede">This is the same x402 call an agent makes. Phantom, Solflare or Backpack signs one USDC transfer. You need $0.01 USDC; no SOL is needed for the fee.</p>
+    <div class="try" style="margin-top:14px">
+      <div class="panel glow" data-try>
+        <label class="field" for="mint-in">pump.fun token mint</label>
+        <div class="inrow">
+          <input class="mint" id="mint-in" data-try-mint placeholder="Paste a mint address…" autocomplete="off" spellcheck="false" maxlength="44">
+          <button class="btn" type="button" data-try-check>Check price</button>
+        </div>
+        <div class="recent" data-try-recent aria-label="Recent launches"></div>
+        <div data-try-offer hidden>
+          <div class="price" style="margin-top:16px"><span class="amt" data-try-amt>$0.01</span><span class="note" data-try-amtnote>USDC · one call</span></div>
+          <div class="wallets" data-try-wallets></div>
+        </div>
+        <ol class="progress" data-try-progress hidden>
+          <li data-p="offer">Get the x402 offer (HTTP 402)</li>
+          <li data-p="sign">Sign the USDC transfer in your wallet</li>
+          <li data-p="settle">Facilitator settles on Solana</li>
+          <li data-p="done">Score delivered</li>
+        </ol>
+        <p class="tmsg" data-try-msg role="status" aria-live="polite"></p>
+      </div>
+      <div class="panel" data-try-out>
+        <div data-try-placeholder>
+          <p class="kicker" style="margin:0">Result</p>
+          <p class="note">Pick a recent launch on the left, check the price, then pay. The score, the reasons and the Solscan link of your payment appear here.</p>
+          <div class="meter"><i style="left:0%"></i></div>
+          <div class="scale"><span>0 LOW</span><span>MED</span><span>HIGH</span><span>EXTREME 100</span></div>
+        </div>
+        <div class="result" data-try-result>
+          <div class="gauge"><span class="big" data-r-score>—</span><span class="badge" data-r-verdict>—</span></div>
+          <div class="meter"><i data-r-needle style="left:0%"></i></div>
+          <div class="scale"><span>0 LOW</span><span>MED</span><span>HIGH</span><span>EXTREME 100</span></div>
+          <ul class="reasons" data-r-reasons></ul>
+          <div class="links" data-r-links></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="live" aria-labelledby="calls-h">
+    <div class="sec-head">
+      <div><p class="kicker">Every call is a settled transaction</p><h2 id="calls-h">Last 50 calls</h2></div>
+      <p class="note">Wallets, not people. Scores are signals, not advice.</p>
+    </div>
+    <div class="scroll"><ul class="calls" data-calls></ul></div>
   </section>
 
   <section aria-labelledby="caught-h">
-    <h2 id="caught-h">Caught it</h2>
-    <p class="note">Scored HIGH/EXTREME before the dump — both timestamps shown. Wallets, not people.</p>
-    <ul class="calls" data-caught></ul>
+    <p class="kicker">Caught it</p>
+    <h2 id="caught-h">Scored HIGH or EXTREME before the dump</h2>
+    <p class="note">Only launches scored before their outcome label. Both timestamps shown.</p>
+    <ul class="calls" data-caught style="margin-top:12px"></ul>
   </section>
 
   <section aria-labelledby="backtest-h">
-    <h2 id="backtest-h">Backtest</h2>
+    <p class="kicker">Backtest</p>
+    <h2 id="backtest-h">How often HIGH+ is right</h2>
     <p class="backtest" data-backtest>—</p>
   </section>
 
-  <p class="note">MCP: the <code>@pumpwire/mcp</code> stdio server (in this repo, <code>packages/mcp</code>) exposes <code>rug_risk_score(mint)</code> and pays from your own wallet. First-party calls (our own Scout) are always labelled.</p>
-  <footer>PumpWire ($PWIRE) · AnsemHack Clawrena · built on ClawPump × pump.fun · risk scores are signals, not advice.</footer>
+  <section id="agents" aria-labelledby="agents-h">
+    <p class="kicker">For agents and builders</p>
+    <h2 id="agents-h">Give your agent its own wallet. It pays per call.</h2>
+    <div class="two" style="margin-top:16px">
+      <div class="panel">
+        <p class="note" style="margin-top:0">MCP: add <code>@pumpwire/mcp</code> to Claude, Cursor or any MCP client. It exposes <code>rug_risk_score(mint)</code> and pays from your agent's wallet, with a daily cap.</p>
+<pre class="code">{
+  <span class="k">"mcpServers"</span>: {
+    <span class="k">"pumpwire"</span>: {
+      <span class="k">"command"</span>: <span class="s">"node"</span>,
+      <span class="k">"args"</span>: [<span class="s">"/PATH/TO/clawdpump-pwire/packages/mcp/dist/index.js"</span>],
+      <span class="k">"env"</span>: {
+        <span class="k">"PUMPWIRE_API_URL"</span>: <span class="s" data-origin>https://…</span>,
+        <span class="k">"SOLANA_KEYPAIR_PATH"</span>: <span class="s">"/PATH/TO/agent-wallet.json"</span>,
+        <span class="k">"PUMPWIRE_NETWORK"</span>: <span class="s">"mainnet"</span>,
+        <span class="k">"PUMPWIRE_DAILY_CAP_USD"</span>: <span class="s">"1"</span>
+      }
+    }
+  }
+}</pre>
+        <p class="note">Raw HTTP: any x402 client works.</p>
+<pre class="code">curl -i <span data-origin>https://…</span>/v1/risk/&lt;mint&gt;
+<span class="k">HTTP/1.1 402 Payment Required</span>   <span class="s"># x402 offer: 10000 USDC base units</span></pre>
+        <p class="note">Source and docs: <a href="https://github.com/Josefusan/clawdpump-pwire" target="_blank" rel="noopener noreferrer">github.com/Josefusan/clawdpump-pwire</a></p>
+      </div>
+      <div class="panel holder">
+        <p class="kicker" style="color:var(--violet)">$PWIRE holder price</p>
+        <div class="price"><span class="amt">$0.005</span><span class="note">per call, instead of $0.01</span></div>
+        <p class="note">A wallet that holds at least <strong style="color:var(--fg)">1,000,000 $PWIRE</strong> and pays from that same wallet gets half price. The MCP client and the Try it box ask for it automatically.</p>
+        <p class="note"><span data-holder-calls>0</span> holder calls so far.</p>
+        <p class="note mono" style="font-size:11px">mint 2b2Tv315U1FUtYF9Y1H2b2qrCnL3tN5QPabScFPCw8vw</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>PumpWire ($PWIRE) · AnsemHack Clawrena · built on ClawPump × pump.fun</span>
+    <span>Risk scores are signals, not advice. First-party calls (our own Scout) are always labelled.</span>
+  </footer>
 </main>
 <script type="module" src="/live/live.js"></script>
+<script type="module" src="/live/try.js"></script>
 </body>
 </html>
