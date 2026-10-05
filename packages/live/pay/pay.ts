@@ -51,8 +51,8 @@ export async function connect(name: string): Promise<Connected> {
   const wallet = found.filter(usable).find((w) => w.name === name);
   if (!wallet) throw new Error('wallet not found');
   const { accounts } = await wallet.features['standard:connect'].connect();
-  const account = (accounts as WalletAccount[]).find((a) => MINT_RE.test(a.address)) ?? wallet.accounts[0];
-  if (!account) throw new Error('the wallet returned no account');
+  const account = (accounts as WalletAccount[]).find((a) => MINT_RE.test(a.address));
+  if (!account) throw new Error('the wallet returned no Solana account');
   return { wallet, account, address: account.address };
 }
 
@@ -82,7 +82,7 @@ export function walletSigner(c: Connected, chain = 'solana:mainnet') {
 }
 
 // ---------- the call ----------
-export interface Offer { amount: bigint; asset: string; network: string; payTo: string; holder: boolean }
+export interface Offer { amount: bigint; asset: string; network: string; payTo: string; feePayer: string; holder: boolean }
 export type Step = 'offer' | 'sign' | 'settle' | 'done';
 
 function offerOf(body: any): Offer {
@@ -90,14 +90,19 @@ function offerOf(body: any): Offer {
   if (!a || a.scheme !== 'exact') throw new Error('unexpected payment offer');
   if (!/^[0-9]{1,15}$/.test(String(a.amount))) throw new Error('malformed price');
   const amount = BigInt(a.amount);
-  return { amount, asset: String(a.asset), network: String(a.network), payTo: String(a.payTo), holder: amount < MAX_AMOUNT };
+  return { amount, asset: String(a.asset), network: String(a.network), payTo: String(a.payTo), feePayer: String(a.extra?.feePayer ?? ''), holder: amount < MAX_AMOUNT };
 }
 
 /** The network and asset the page accepts. Mainnet USDC on /live; tests pass devnet. */
-export interface Expect { network: string; asset: string; chain: string }
-export const EXPECT_MAINNET: Expect = { network: MAINNET, asset: USDC_MAINNET, chain: 'solana:mainnet' };
+export interface Expect { network: string; asset: string; chain: string; payTo?: string }
+/** payTo = the API's PAYTO_ADDRESS (public). Pinned so a misrouted proxy or a wrong env cannot redirect a payment. */
+export const PAYTO_MAINNET = '6TeXC9ay1RBHE2QasADUScD1865ZKfmePFt8wkQLc8Se';
+export const EXPECT_MAINNET: Expect = { network: MAINNET, asset: USDC_MAINNET, chain: 'solana:mainnet', payTo: PAYTO_MAINNET };
 
-function guard(o: Offer, x: Expect) {
+function guard(o: Offer, x: Expect, payer?: string) {
+  if (x.payTo && o.payTo !== x.payTo) throw new Error('the offer pays an unexpected wallet; refusing to sign');
+  // The facilitator pays the SOL fee. A fee payer equal to the user would make the user pay it and hold a full tx.
+  if (!MINT_RE.test(o.feePayer) || (payer && o.feePayer === payer)) throw new Error('unexpected fee payer; refusing to sign');
   if (o.network !== x.network) throw new Error('the offer is on the wrong network');
   if (o.asset !== x.asset) throw new Error('the offer is not in USDC');
   if (o.amount <= 0n || o.amount > MAX_AMOUNT) throw new Error('the price is above $0.01; refusing to sign');
@@ -135,7 +140,7 @@ export async function payForScore(opts: {
   client.onBeforePaymentCreation(async ({ selectedRequirements }: any) => {
     try {
       offer = offerOf({ accepts: [selectedRequirements] });
-      guard(offer, x);
+      guard(offer, x, conn.address);
     } catch (e) {
       return { abort: true, reason: e instanceof Error ? e.message : 'refused' };
     }
@@ -152,7 +157,9 @@ export async function payForScore(opts: {
   try { body = await res.json(); } catch { /* non-JSON */ }
   if (res.status !== 200) {
     const msg = body?.message ?? body?.error ?? `HTTP ${res.status}`;
-    throw new Error(/insufficient|balance|no record of a prior credit/i.test(msg) ? 'not enough USDC in this wallet (needs $0.01 + nothing else; the fee is paid for you)' : msg);
+    // Only token-balance wording means the user lacks USDC; anything else (e.g. facilitator problems) is shown as-is.
+    const noUsdc = /insufficient (token|funds).*(token|usdc|account)|no record of a prior credit|token account.*(not found|does not exist)/i.test(msg);
+    throw new Error(noUsdc ? 'Not enough USDC in this wallet. You need $0.01 USDC; the SOL fee is paid for you.' : String(msg).slice(0, 200));
   }
   const tx = txFromHeader(res.headers.get('payment-response'));
   onStep?.('done', offer ?? undefined);

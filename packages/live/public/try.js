@@ -192,9 +192,9 @@ async function doPay() {
   try {
     const paid = await pay.payForScore({
       apiBase: API, mint, conn,
-      onStep: (s) => {
+      onStep: (s, o) => {
         setStep(s);
-        if (s === 'sign') say('Approve the USDC transfer in your wallet…');
+        if (s === 'sign') say(`Approve the ${o ? usd(o.amount) : ''} USDC transfer in your wallet…`.replace('  ', ' '));
         if (s === 'settle') say('Settling on Solana…');
       },
     });
