@@ -6,7 +6,7 @@
 
 ## The problem
 
-Trading agents on pump.fun see a new mint, but they can't see who deployed it, who bought first, whether those buyers are one person, or whether this dev has rugged ten times this week. Each bot rebuilds that forensics badly. PumpWire does it once, well, and sells it per call.
+Trading agents on pump.fun see a new mint, but they can't see who deployed it, who bought first, whether those buyers are one person, or whether this dev's earlier launches tend to die or dump. Each bot rebuilds that forensics badly. PumpWire does it once, well, and sells it per call.
 
 ## What PumpWire sells (MCP tools / paid endpoints)
 

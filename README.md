@@ -36,7 +36,7 @@ Every call is risk information, not advice.
 ## The problem
 
 A trading agent on pump.fun sees a new mint — but it can't see **who deployed it**, **who bought first**,
-whether those buyers are **one person**, or whether this dev has rugged ten times this week.
+whether those buyers are **one person**, or whether this dev's earlier launches tend to die or dump.
 Every bot rebuilds that forensics badly, alone.
 
 PumpWire does it **once, well, and sells it per call.**

@@ -62,8 +62,9 @@ USDC (mint `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`) through the PayAI fac
 
 | Item | Value | Source |
 |---|---|---|
-| Paid calls (mainnet) | 250: 250 first-party, 0 third-party | `GET /v1/stats`, 2026-10-01 22:54:52Z |
-| USDC paid over x402 | 2.500000 USDC | same |
+| Paid calls (mainnet) | 550: 550 first-party, 0 third-party | `GET /v1/stats`, 2026-10-06 20:38:24Z |
+| USDC paid over x402 | 5.500000 USDC | same |
+| Unique payers / integrators | 1 / 0 | same |
 | Network | `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` (mainnet) | same |
 | First mainnet tx | https://solscan.io/tx/2g4VYTEXJHv3ERz2j37JKQH5ppMKuoH8yZAvT4rvp6bqFjUC7yCCAcE525fVVuXyVix7ziCWnreaMUDGsyqPGLu | finalized, slot 452410434 |
 | Mainnet tx 2 | https://solscan.io/tx/5RVyKA9XM7vrbRitLUG4PxGmUgwcz6dKNxZ9MAkt6HJMDiLAPkdvkBmhkxKqGxytg4dFVdrYQQLV3YXHL1VZK9Ec | `/v1/stats` `last_calls` |

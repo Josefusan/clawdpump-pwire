@@ -202,11 +202,11 @@ launches, picks ones with ≥ 5 distinct non-deployer buyers in their first 120 
 pays for a `rug_risk_score` through the same capped MCP client as everyone else, and writes an alert
 **draft** for `HIGH` / `EXTREME`. It never trades and never posts.
 
-**Where it runs:** on devnet, on the team server, under pm2:
+**Where it runs:** on mainnet, on the team server, under pm2:
 
 ```bash
 npm run build -w @pumpwire/scout
-pm2 start ecosystem.devnet.config.cjs --only pumpwire-scout-devnet
+pm2 start ecosystem.mainnet.config.cjs --only pumpwire-scout
 ```
 
 Caps are clamped in code to ≤ $0.05 per call and ≤ $5 per UTC day; env can only lower them.
